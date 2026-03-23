@@ -1,0 +1,15 @@
+<resources>
+
+    <string name="app_name">My Application</string>
+
+    <string name="btn_shuffle">シャッフル</string>
+    <string name="btn_reset">リセット</string>
+    <string name="btn_hide_jp">日本語 全非表示</string>
+    <string name="btn_hide_kr">韓国語 全非表示</string>
+
+    <string name="label_no">No</string>
+    <string name="label_jp">日本語</string>
+    <string name="label_kr">韓国語</string>
+
+    <string name="voice_credit">VOICEVOX:ずんだもん</string>
+</resources>

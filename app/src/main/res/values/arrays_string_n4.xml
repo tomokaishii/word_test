@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="categories_n5">
+        <item>家族</item>
+        <item>街</item>
+    </string-array>
+
+    <string-array name="n5_家族_jp"><item>お父さん</item><item>お母さん</item></string-array>
+    <string-array name="n5_家族_ruby"><item>とう</item><item>かあ</item></string-array>
+    <string-array name="n5_家族_kr"><item>아빠</item><item>엄마</item></string-array>
+
+    <string-array name="n5_街_jp"><item>学校</item><item>駅</item></string-array>
+    <string-array name="n5_街_ruby"><item>がっこう</item><item>えき</item></string-array>
+    <string-array name="n5_街_kr"><item>학교</item><item>역</item></string-array>
+</resources>
