@@ -1,15 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="categories_n4">
+    <string-array name="categories_n5">
         <item>家族</item>
-        <item>街</item>
+        <item>家の中</item>
+        <item>日常</item>
     </string-array>
 
-    <string-array name="n4_家族_jp"><item>お父さん</item><item>お母さん</item></string-array>
-    <string-array name="n4_家族_ruby"><item>とう</item><item>かあ</item></string-array>
-    <string-array name="n4_家族_kr"><item>아빠</item><item>엄마</item></string-array>
+    <!-- N5 家族 -->
+    <string-array name="n5_家族_jp">
+        <item>お父さん</item>
+        <item>お母さん</item>
+        <item>お兄さん</item>
+        <item>お姉さん</item>
+        <item>弟</item>
+        <item>妹</item>
+        <item>おじいさん</item>
+        <item>おばあさん</item>
+        <item>子供</item>
+        <item>友達</item>
+    </string-array>
+    <string-array name="n5_家族_ruby">
+        <item>とう</item>
+        <item>かあ</item>
+        <item>にい</item>
+        <item>ねえ</item>
+        <item>おとうと</item>
+        <item>いもうと</item>
+        <item>じい</item>
+        <item>ばあ</item>
+        <item>こども</item>
+        <item>ともだち</item>
+    </string-array>
+    <string-array name="n5_家族_kr">
+        <item>아빠</item>
+        <item>엄마</item>
+        <item>오빠/형</item>
+        <item>언니/누나</item>
+        <item>남동생</item>
+        <item>여동생</item>
+        <item>할아버지</item>
+        <item>할머니</item>
+        <item>아이</item>
+        <item>친구</item>
+    </string-array>
 
-    <string-array name="n4_街_jp"><item>学校</item><item>駅</item></string-array>
-    <string-array name="n4_街_ruby"><item>がっこう</item><item>えき</item></string-array>
-    <string-array name="n4_街_kr"><item>학교</item><item>역</item></string-array>
+    <!-- N5 家の中 -->
+    <string-array name="n5_家の中_jp">
+        <item>部屋</item>
+        <item>台所</item>
+        <item>窓</item>
+        <item>机</item>
+        <item>椅子</item>
+        <item>冷蔵庫</item>
+        <item>時計</item>
+        <item>テレビ</item>
+        <item>靴</item>
+        <item>服</item>
+    </string-array>
+    <string-array name="n5_家の中_ruby">
+        <item>へや</item>
+        <item>だいどころ</item>
+        <item>まど</item>
+        <item>つくえ</item>
+        <item>いす</item>
+        <item>れいぞうこ</item>
+        <item>とけい</item>
+        <item></item>
+        <item>くつ</item>
+        <item>ふく</item>
+    </string-array>
+    <string-array name="n5_家の中_kr">
+        <item>방</item>
+        <item>부엌</item>
+        <item>창문</item>
+        <item>책상</item>
+        <item>의자</item>
+        <item>냉장고</item>
+        <item>시계</item>
+        <item>텔레비전</item>
+        <item>신발</item>
+        <item>옷</item>
+    </string-array>
+
+    <!-- N5 日常 -->
+    <string-array name="n5_日常_jp">
+        <item>ご飯</item>
+        <item>水</item>
+        <item>お茶</item>
+        <item>パン</item>
+        <item>肉</item>
+        <item>魚</item>
+        <item>野菜</item>
+        <item>果物</item>
+        <item>卵</item>
+        <item>牛乳</item>
+    </string-array>
+    <string-array name="n5_日常_ruby">
+        <item>はん</item>
+        <item>みず</item>
+        <item>ちゃ</item>
+        <item></item>
+        <item>にく</item>
+        <item>さかな</item>
+        <item>やさい</item>
+        <item>くだもの</item>
+        <item>たまご</item>
+        <item>ぎゅうにゅう</item>
+    </string-array>
+    <string-array name="n5_日常_kr">
+        <item>밥</item>
+        <item>물</item>
+        <item>차</item>
+        <item>빵</item>
+        <item>고기</item>
+        <item>생선</item>
+        <item>야채</item>
+        <item>과일</item>
+        <item>계란</item>
+        <item>우유</item>
+    </string-array>
 </resources>
