@@ -1,5 +1,6 @@
 package com.example.test.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,6 +51,7 @@ fun ZundamonPlayerArea(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            // --- [上段] メニューと表示切替 ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -61,39 +63,64 @@ fun ZundamonPlayerArea(
                         onExpandedChange = { expanded = !expanded },
                         modifier = Modifier.weight(1f)
                     ) {
-                        OutlinedTextField(
-                            value = selectedDescription,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("単語帳の説明：", fontSize = 9.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF2ED573),
-                                unfocusedBorderColor = Color.LightGray
-                            ),
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
+                        Surface(
                             modifier = Modifier
                                 .menuAnchor()
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
-                        )
+                                .fillMaxWidth()
+                                .height(45.dp), // 少し高さを広げてラベルスペースを確保
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color.LightGray),
+                            color = Color.White
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                    verticalArrangement = Arrangement.Top // 左上に寄せる
+                                ) {
+                                    // 🌟 メインの選択値を少し上に持ち上げて配置
+                                    Text(
+                                        text = selectedDescription,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        modifier = Modifier.offset(y = (-2).dp)
+                                    )
+                                }
+                                // 下向き矢印アイコン
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            }
+                        }
+
+                        // ドロップダウンメニュー本体
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
                             descriptions.forEach { desc ->
                                 DropdownMenuItem(
-                                    text = { Text(desc, fontSize = 11.sp) },
-                                    onClick = { onDescriptionChange(desc); expanded = false }
+                                    text = {
+                                        Text(
+                                            text = desc,
+                                            fontSize = 14.sp,          // 少し大きめで標準サイズ
+                                            fontWeight = FontWeight.Normal, // 普通の太さ
+                                            color = Color.Black        // 標準文字色
+                                        )
+                                    },
+                                    onClick = { onDescriptionChange(desc); expanded = false },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp) // 少し余白
                                 )
                             }
                         }
                     }
                     Spacer(Modifier.width(8.dp))
                 }
+                // 表示・非表示の切り替えボタン
                 IconButton(
                     onClick = { isControlsVisible = !isControlsVisible },
                     modifier = Modifier
@@ -110,20 +137,20 @@ fun ZundamonPlayerArea(
             }
 
             if (isControlsVisible) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
+                // --- [中段] 単語表示エリア ---
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFF8F9FA), RoundedCornerShape(14.dp))
                         .border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(14.dp))
-                        .padding(10.dp),
+                        .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
+                    KanjiMarkerArea(
                         text = currentWord?.jp ?: "再生準備完了",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0xFF212529)
+                        markerColor = Color(0xFF228BE6)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -133,7 +160,10 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                
+                Spacer(Modifier.height(10.dp))
+                
+                // --- [下段] 再生コントロール ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
@@ -144,8 +174,7 @@ fun ZundamonPlayerArea(
                         modifier = Modifier.size(44.dp),
                         color = Color(0xFF2ED573),
                         shape = RoundedCornerShape(10.dp),
-                        shadowElevation = 4.dp
-                    ) {
+                        shadowElevation = 4.dp) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("◀", color = Color.White, fontSize = 16.sp)
                         }
@@ -156,8 +185,7 @@ fun ZundamonPlayerArea(
                         modifier = Modifier.size(54.dp),
                         color = Color(0xFF2ED573),
                         shape = RoundedCornerShape(12.dp),
-                        shadowElevation = 6.dp
-                    ) {
+                        shadowElevation = 6.dp) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(if (isPlaying) "⏸" else "▶", color = Color.White, fontSize = 24.sp)
                         }
@@ -168,14 +196,16 @@ fun ZundamonPlayerArea(
                         modifier = Modifier.size(44.dp),
                         color = Color(0xFF2ED573),
                         shape = RoundedCornerShape(10.dp),
-                        shadowElevation = 4.dp
-                    ) {
+                        shadowElevation = 4.dp) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("▶", color = Color.White, fontSize = 16.sp)
                         }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                
+                Spacer(Modifier.height(10.dp))
+                
+                // --- [最下段] 再生速度切り替え ---
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -215,6 +245,36 @@ fun ZundamonPlayerArea(
                 color = Color.LightGray,
                 fontWeight = FontWeight.Medium
             )
+        }
+    }
+}
+
+/**
+ * 漢字強調表示コンポーネント
+ */
+@Composable
+fun KanjiMarkerArea(text: String, fontSize: androidx.compose.ui.unit.TextUnit, markerColor: Color) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        text.forEach { char ->
+            val kanji = char in '\u4e00'..'\u9faf'
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally, 
+                modifier = Modifier.padding(horizontal = 0.5.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width((fontSize.value * 0.7).dp)
+                        .height(4.dp)
+                        .background(if (kanji) markerColor else Color.Transparent)
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = char.toString(),
+                    fontSize = fontSize,
+                    fontWeight = if (kanji) FontWeight.Bold else FontWeight.Normal,
+                    color = Color(0xFF212529)
+                )
+            }
         }
     }
 }

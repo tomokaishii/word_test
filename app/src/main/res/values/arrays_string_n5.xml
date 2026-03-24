@@ -8,7 +8,7 @@
 
     <!-- N5 家族 -->
     <string-array name="n5_家族_jp">
-        <item>お父さん</item>
+        <item>朝ご飯</item>
         <item>お母さん</item>
         <item>お兄さん</item>
         <item>お姉さん</item>
@@ -20,7 +20,7 @@
         <item>友達</item>
     </string-array>
     <string-array name="n5_家族_ruby">
-        <item>とう</item>
+        <item>あさ,はん</item>
         <item>かあ</item>
         <item>にい</item>
         <item>ねえ</item>

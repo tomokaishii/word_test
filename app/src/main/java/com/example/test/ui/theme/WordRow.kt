@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,99 +20,75 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.test.Word
-
-private val MaskColor = Color(0xFFADB5BD)
-private val BorderColor = Color(0xFFE9ECEF)
-private val HeaderBg = Color(0xFF1E3A8A)
-
-@Composable
-fun WordTableHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth().background(HeaderBg).padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("No", Modifier.width(45.dp), fontSize = 14.sp, color = Color.White, textAlign = TextAlign.Center)
-        Text("日本語", Modifier.weight(1f), fontSize = 14.sp, color = Color.White, textAlign = TextAlign.Center)
-        Text("韓国語", Modifier.weight(1f), fontSize = 14.sp, color = Color.White, textAlign = TextAlign.Center)
-    }
-}
+import androidx.compose.runtime.remember
 
 /**
- * 特定の文字の上にルビを振るためのコンポーネント
+ * 漢字かどうかを判定する（Unicode: 4E00-9FAF）
+ */
+private fun isKanji(char: Char): Boolean = char in '\u4e00'..'\u9faf'
+
+/**
+ * 漢字の上に色付きのマーカー（空白と色）を表示するコンポーネント
+ */
+
+/**
+ * 漢字の上にルビ（ひらがな）を表示するコンポーネント
  */
 @Composable
-fun RubyText(
-    fullText: String,
-    rubySource: String,
-    fontSize: TextUnit
+fun KanjiMarkerText(
+    text: String,
+    rubyStr: String,
+    fontSize: TextUnit,
+    rubyColor: Color = Color(0xFF228BE6) // ← 追加
 ) {
-    val rubyFs = (fontSize.value * 0.45).sp
-    val baseStyle = TextStyle(
-        platformStyle = PlatformTextStyle(includeFontPadding = false),
-        textAlign = TextAlign.Center
-    )
-
-    // ルビの解析: "父|とう,母|かあ" -> mapOf("父" to "とう", "母" to "かあ")
-    // また、古い形式 "とう,かあ" (カンマ区切り) にもフォールバック対応
-    val rubyMap = remember(rubySource) {
-        if (rubySource.isBlank()) emptyMap()
-        else {
-            val map = mutableMapOf<String, String>()
-            rubySource.split(",").forEach { item ->
-                val parts = item.split("|")
-                if (parts.size == 2) {
-                    map[parts[0]] = parts[1]
-                }
-            }
-            map
-        }
+    // ルビをカンマで分割してリスト化
+    val rubies = remember(rubyStr) {
+        if (rubyStr.isBlank()) emptyList() else rubyStr.split(",")
     }
+
+    var rubyIndex = 0
 
     Row(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.Center
     ) {
-        // もし rubySource に "|" が含まれていない場合、従来通り単語全体に対して表示
-        if (!rubySource.contains("|") && rubySource.isNotBlank()) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = rubySource, style = baseStyle.copy(fontSize = rubyFs, color = Color.Gray), maxLines = 1)
-                Text(text = fullText, style = baseStyle.copy(fontSize = fontSize, fontWeight = FontWeight.Bold))
-                Text(text = rubySource, style = baseStyle.copy(fontSize = rubyFs, color = Color.Transparent), maxLines = 1)
-            }
-        } else {
-            // 文字単位でのルビ表示
-            fullText.forEach { char ->
-                val charStr = char.toString()
-                val ruby = rubyMap[charStr]
+        text.forEach { char ->
+            val isKanji = char in '\u4e00'..'\u9faf'
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.wrapContentWidth()
+            ) {
+                // --- ルビ表示エリア ---
+                if (isKanji && rubyIndex < rubies.size) {
                     Text(
-                        text = ruby ?: " ",
-                        style = baseStyle.copy(
-                            fontSize = rubyFs,
-                            color = if (ruby == null) Color.Transparent else Color.Gray
-                        ),
-                        maxLines = 1
+                        text = rubies[rubyIndex],
+                        fontSize = (fontSize.value * 0.4f).sp, // メイン文字の40%のサイズ
+                        color = Color(0xFF228BE6), // 青色
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = (fontSize.value * 0.4f).sp
                     )
-                    Text(
-                        text = charStr,
-                        style = baseStyle.copy(
-                            fontSize = fontSize,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    )
-                    Text(
-                        text = ruby ?: " ",
-                        style = baseStyle.copy(fontSize = rubyFs, color = Color.Transparent),
-                        maxLines = 1
-                    )
+                    rubyIndex++ // 次の漢字のためにインデックスを進める
+                } else {
+                    // 漢字以外、またはルビが足りない場合は高さを確保するための空スペース
+                    Spacer(modifier = Modifier.height((fontSize.value * 0.4f).dp))
                 }
+
+                // --- メインの文字（日本語） ---
+                Text(
+                    text = char.toString(),
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+                )
             }
         }
     }
 }
 
+/**
+ * 単語リストの1行を表示するコンポーネント
+ */
 @Composable
 fun WordRow(
     index: Int,
@@ -122,45 +97,97 @@ fun WordRow(
     onJpClick: () -> Unit,
     onKrClick: () -> Unit
 ) {
-    val jpAlpha by animateFloatAsState(targetValue = if (word.jpHide) 1f else 0f, animationSpec = tween(300), label = "jp")
-    val krAlpha by animateFloatAsState(targetValue = if (word.krHide) 1f else 0f, animationSpec = tween(300), label = "kr")
+    // 表示・非表示のアニメーション設定
+    val jpAlpha by animateFloatAsState(
+        targetValue = if (word.jpHide) 1f else 0f,
+        animationSpec = tween(300),
+        label = "jpAlpha"
+    )
+    val krAlpha by animateFloatAsState(
+        targetValue = if (word.krHide) 1f else 0f,
+        animationSpec = tween(300),
+        label = "krAlpha"
+    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .border(0.5.dp, BorderColor)
+            .border(0.5.dp, Color(0xFFE9ECEF))
             .background(Color.White)
-            .padding(vertical = 4.dp, horizontal = 12.dp)
+            .padding(vertical = 12.dp, horizontal = 12.dp)
     ) {
-        Box(modifier = Modifier.width(45.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-            Text(text = (index + 1).toString(), fontSize = 14.sp, color = Color.Gray)
+        // --- No (番号) ---
+        Box(
+            modifier = Modifier.width(45.dp).fillMaxHeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "${index + 1}", fontSize = 14.sp, color = Color.Gray)
         }
 
-        Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable { onJpClick() }, contentAlignment = Alignment.Center) {
-            RubyText(
-                fullText = word.jp,
-                rubySource = word.ruby,
-                fontSize = fontSize
+        // --- 日本語エリア ---
+        Box(
+            modifier = Modifier.weight(1f).fillMaxHeight().clickable { onJpClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            // 💡 漢字の上に色付きマーカーを表示するコンポーネントに変更
+            KanjiMarkerText(
+                text = word.jp,
+                rubyStr = word.ruby,
+                fontSize = fontSize,
+                rubyColor = Color.Red
             )
+
+            // 目隠しマスク
             if (jpAlpha > 0f) {
-                Box(modifier = Modifier.matchParentSize().padding(2.dp).background(MaskColor.copy(alpha = jpAlpha)))
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(2.dp)
+                        .background(Color(0xFFADB5BD).copy(alpha = jpAlpha))
+                )
             }
         }
 
-        Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable { onKrClick() }, contentAlignment = Alignment.Center) {
+        // --- 韓国語エリア ---
+        Box(
+            modifier = Modifier.weight(1f).fillMaxHeight().clickable { onKrClick() },
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = word.kr,
-                style = TextStyle(
-                    fontSize = fontSize,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    platformStyle = PlatformTextStyle(includeFontPadding = false)
-                )
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
             )
+            // 目隠しマスク
             if (krAlpha > 0f) {
-                Box(modifier = Modifier.matchParentSize().padding(2.dp).background(MaskColor.copy(alpha = krAlpha)))
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(2.dp)
+                        .background(Color(0xFFADB5BD).copy(alpha = krAlpha))
+                )
             }
         }
+    }
+}
+
+/**
+ * テーブルの見出し
+ */
+@Composable
+fun WordTableHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1E3A8A))
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("No", Modifier.width(45.dp), color = Color.White, fontSize = 14.sp, textAlign = TextAlign.Center)
+        Text("日本語", Modifier.weight(1f), color = Color.White, fontSize = 14.sp, textAlign = TextAlign.Center)
+        Text("韓国語", Modifier.weight(1f), color = Color.White, fontSize = 14.sp, textAlign = TextAlign.Center)
     }
 }
