@@ -1,11 +1,4 @@
-package com.example.test
+package com.example.test.ui.theme
 
-// 🌟 ルビ対応版
-data class Word(
-    val id: Int,
-    val jp: String,
-    val ruby: String = "",
-    val kr: String,
-    val jpHide: Boolean = false,
-    val krHide: Boolean = false
-)
+// 重複回避のため空にするか、ファイルを削除してください。
+// 今回はWord.ktに統一するため、このファイルは不要です。
