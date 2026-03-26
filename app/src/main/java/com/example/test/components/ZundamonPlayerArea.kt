@@ -19,8 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.test.Word
-import android.media.MediaPlayer
-import androidx.compose.runtime.remember
 
 /**
  * ずんだもんプレイヤーエリア
@@ -69,7 +67,8 @@ fun ZundamonPlayerArea(
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth()
-                                .height(45.dp), // 少し高さを広げてラベルスペースを確保
+                                .height(48.dp) // 適度な高さ
+                                .clickable { expanded = true },
                             shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(1.dp, Color.LightGray),
                             color = Color.White
@@ -77,23 +76,18 @@ fun ZundamonPlayerArea(
                             Row(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(horizontal = 10.dp),
+                                    .padding(horizontal = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column(
-                                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                                    verticalArrangement = Arrangement.Top // 左上に寄せる
-                                ) {
-                                    // 🌟 メインの選択値を少し上に持ち上げて配置
-                                    Text(
-                                        text = selectedDescription,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        modifier = Modifier.offset(y = (-2).dp)
-                                    )
-                                }
+                                // 🌟 内部のテキスト配置を「普通」にする（中央寄せ）
+                                Text(
+                                    text = selectedDescription,
+                                    fontSize = 14.sp, 
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                                
                                 // 下向き矢印アイコン
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             }
@@ -106,16 +100,15 @@ fun ZundamonPlayerArea(
                         ) {
                             descriptions.forEach { desc ->
                                 DropdownMenuItem(
-                                    text = {
+                                    text = { 
                                         Text(
-                                            text = desc,
-                                            fontSize = 14.sp,          // 少し大きめで標準サイズ
-                                            fontWeight = FontWeight.Normal, // 普通の太さ
-                                            color = Color.Black        // 標準文字色
-                                        )
+                                            text = desc, 
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium
+                                        ) 
                                     },
                                     onClick = { onDescriptionChange(desc); expanded = false },
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp) // 少し余白
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                                 )
                             }
                         }
@@ -162,9 +155,9 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
                 }
-
+                
                 Spacer(Modifier.height(10.dp))
-
+                
                 // --- [下段] 再生コントロール ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -204,9 +197,9 @@ fun ZundamonPlayerArea(
                         }
                     }
                 }
-
+                
                 Spacer(Modifier.height(10.dp))
-
+                
                 // --- [最下段] 再生速度切り替え ---
                 Row(
                     modifier = Modifier
@@ -237,6 +230,7 @@ fun ZundamonPlayerArea(
                     }
                 }
             }
+            // クレジット表記
             Text(
                 "VOICEVOX:ずんだもん",
                 modifier = Modifier
@@ -260,13 +254,13 @@ fun KanjiMarkerArea(text: String, fontSize: androidx.compose.ui.unit.TextUnit, m
         text.forEach { char ->
             val kanji = char in '\u4e00'..'\u9faf'
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.CenterHorizontally, 
                 modifier = Modifier.padding(horizontal = 0.5.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .width((fontSize.value * 0.7).dp)
-                        .height(4.dp)
+                        .width((fontSize.value * 0.7).dp) 
+                        .height(4.dp) 
                         .background(if (kanji) markerColor else Color.Transparent)
                 )
                 Spacer(Modifier.height(2.dp))

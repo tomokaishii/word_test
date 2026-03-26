@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- レベル一覧（N5〜N1） -->
     <string-array name="levels_array">
         <item>N5</item>
         <item>N4</item>
         <item>N3</item>
         <item>N2</item>
         <item>N1</item>
+    </string-array>
+    <!--エラーメッセージ 表示するレベルリストが空です。リソースを確認してください。 -->
+    <string-array name="levels_array_err">
+        No levels available. Please check the resource configuration.
     </string-array>
 </resources>

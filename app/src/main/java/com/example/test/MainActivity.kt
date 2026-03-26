@@ -25,18 +25,13 @@ import com.example.test.ui.theme.WordTableHeader
 /**
  * 【MainActivity: アプリのエントリポイント】
  * UIの構築のみに集中し、複雑なロジックや状態管理はViewModelに委譲しています。
- *
- * 設計思想:
- * - 単一責任の原則: ActivityはViewの構築のみを行う。
- * - 状態の永続化: ViewModelを使用することで、画面回転時もデータが保持される。
  */
 class MainActivity : ComponentActivity() {
-    // ViewModelのインスタンス生成。Activityのライフサイクルを通じて1つだけ保持される。
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // ステータスバーまで描画範囲を広げる
+        enableEdgeToEdge()
         setContent { 
             MaterialTheme { 
                 MainScreen(viewModel) 
@@ -50,13 +45,12 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun MainScreen(vm: MainViewModel) {
-    // リソース(strings.xml)からレベル一覧を取得
-    val levels = stringArrayResource(R.array.levels_array).toList()
+    // 💡 初回起動時のデータロード処理
+    val defaultLevel = stringArrayResource(R.array.levels_array).firstOrNull() ?: "N5"
     
-    // 初回起動時のデータロード処理
     LaunchedEffect(Unit) {
         if (vm.categories.isEmpty()) {
-            vm.updateLevel(levels.firstOrNull() ?: "N5")
+            vm.updateLevel(defaultLevel)
         }
     }
 
@@ -67,19 +61,18 @@ fun MainScreen(vm: MainViewModel) {
             .statusBarsPadding()
     ) {
         // --- [上部] 固定ヘッダーエリア ---
-        // zIndex(10f) を指定することで、カテゴリー選択などのドロップダウンがリストより上に表示されるようにする
         Box(modifier = Modifier.fillMaxWidth().zIndex(10f)) {
             Column(modifier = Modifier.fillMaxWidth().background(Color(0xFFF8F9FA))) {
                 
-                // 1. レベル選択タブ (N5, N4...)
-                LevelTabs(levels, vm.currentLevel) { vm.updateLevel(it) }
+                // 1. レベル選択タブ (N1~N5)
+                LevelTabs(vm.currentLevel) { vm.updateLevel(it) }
                 
                 // 2. カテゴリー選択ドロップダウン
                 CategorySelector(vm.currentCategory, vm.categories) { vm.updateCategory(it) }
                 
                 Spacer(Modifier.height(10.dp))
 
-                // 3. 一括操作ボタン群 (シャッフル、リセット、全非表示など)
+                // 3. 一括操作ボタン群
                 MainActionButtons(
                     onShuffle = { vm.shuffle() },
                     onReset = { vm.loadWords() },
@@ -89,7 +82,7 @@ fun MainScreen(vm: MainViewModel) {
                     krLabel = if (vm.allKrHidden) "韓国語 全表示" else "韓国語 全非表示"
                 )
 
-                // 4. ずんだもんプレイヤー (音声再生コントロール)
+                // 4. ずんだもんプレイヤー
                 ZundamonPlayerArea(
                     isPlaying = vm.isPlaying,
                     currentSpeed = vm.playbackSpeed,
@@ -98,24 +91,21 @@ fun MainScreen(vm: MainViewModel) {
                     currentWord = vm.wordList.getOrNull(vm.currentPlayingIndex),
                     onDescriptionChange = { vm.selectedDescription = it },
                     onPlayPause = { vm.togglePlay() },
-                    onSpeedChange = { vm.playbackSpeed = it },
+                    onSpeedChange = { playbackSpeed -> vm.playbackSpeed = playbackSpeed },
                     onNext = { vm.next() },
                     onPrev = { vm.prev() }
                 )
 
-                // 5. 文字サイズ調整と単語数表示
+                // 5. 文字サイズ調整
                 FontSizeAndCountRow(vm.wordList.size, vm.fontSize.sp) { vm.fontSize = it.value.toInt() }
                 
                 Spacer(Modifier.height(4.dp))
-                
-                // 6. テーブルの見出し (No, 日本語, 韓国語)
                 WordTableHeader()
             }
         }
 
         // --- [下部] スクロール可能な単語リスト ---
         LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            // keyを指定することで、シャッフル時のアニメーションや再利用効率を最適化
             itemsIndexed(items = vm.wordList, key = { _, w -> w.id }) { index, word ->
                 WordRow(
                     index = index,
@@ -125,7 +115,6 @@ fun MainScreen(vm: MainViewModel) {
                     onKrClick = { vm.toggleWordKr(index) }
                 )
             }
-            // リスト最下部に余白を追加 (最後の単語がプレイヤーに被らないようにする)
             item { Spacer(Modifier.height(80.dp)) }
         }
     }
