@@ -12,16 +12,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.test.data.model.Word // 🌟 修正: data.model.Word を使用
+import com.example.test.data.model.Word
+import com.example.test.ui.screens.LocalFontSizeProvider
+import com.example.test.ui.screens.LocalTextMeasurer
 
 /**
  * ずんだもんプレイヤーエリア
+ * 音声再生コントロール、再生速度変更、現在の単語表示などを行います。
+ *
+ * 💡 爆速化: 文字ごとのコンポーネント生成を廃止し、Canvas直接描画に統一。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,15 +40,16 @@ fun ZundamonPlayerArea(
     isPlaying: Boolean,
     currentSpeed: Float,
     selectedDescription: String,
-    descriptions: List<String> = listOf("単語帳の説明", "単語の発音", "例文の発音"),
+    descriptions: List<String> = listOf("単語帳の説明","単語の発音", "例文の発音"),
     currentWord: Word?,
-    fontSize: TextUnit,
     onDescriptionChange: (String) -> Unit,
     onPlayPause: () -> Unit,
     onSpeedChange: (Float) -> Unit,
     onNext: () -> Unit,
     onPrev: () -> Unit
 ) {
+    val fontSizeProvider = LocalFontSizeProvider.current
+    val fontSize = fontSizeProvider()
     var expanded by remember { mutableStateOf(false) }
     var isControlsVisible by remember { mutableStateOf(true) }
 
@@ -64,7 +76,7 @@ fun ZundamonPlayerArea(
                     ) {
                         Surface(
                             modifier = Modifier
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
                                 .fillMaxWidth()
                                 .height(48.dp)
                                 .clickable { expanded = true },
@@ -106,7 +118,7 @@ fun ZundamonPlayerArea(
                     onClick = { isControlsVisible = !isControlsVisible },
                     modifier = Modifier.size(32.dp).background(Color(0xFFF1F3F5), CircleShape)
                 ) {
-                    Text(if (isControlsVisible) "︾" else "︽", color = Color.DarkGray, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isControlsVisible) "︽" else "︾", color = Color.DarkGray, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -120,9 +132,9 @@ fun ZundamonPlayerArea(
                         .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // 🌟 爆速描画エンジンを適用
                     KanjiMarkerArea(
                         text = currentWord?.jp ?: "再生準備完了",
-                        fontSize = fontSize,
                         markerColor = Color(0xFF228BE6)
                     )
                     Spacer(Modifier.height(4.dp))
@@ -133,9 +145,9 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
                 }
-                
+
                 Spacer(Modifier.height(10.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
@@ -153,17 +165,17 @@ fun ZundamonPlayerArea(
                         Box(contentAlignment = Alignment.Center) { Text("▶", color = Color.White, fontSize = 16.sp) }
                     }
                 }
-                
+
                 Spacer(Modifier.height(10.dp))
-                
+
                 Row(modifier = Modifier.fillMaxWidth().height(34.dp).background(Color(0xFFF1F3F5), RoundedCornerShape(8.dp)).padding(3.dp)) {
                     val speeds = listOf(0.8f to "ゆっくり", 1.0f to "ふつう", 1.2f to "はやい")
                     speeds.forEach { (speed, label) ->
                         val active = currentSpeed == speed
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(if (active) Color(0xFF2ED573) else Color.Transparent).clickable { onSpeedChange(speed) }, contentAlignment = Alignment.Center) {
                             Text(
-                                text = label, 
-                                color = if (active) Color.White else Color(0xFF6C757D), 
+                                text = label,
+                                color = if (active) Color.White else Color(0xFF6C757D),
                                 fontSize = (fontSize.value * 0.45).sp,
                                 fontWeight = FontWeight.ExtraBold
                             )
@@ -171,32 +183,71 @@ fun ZundamonPlayerArea(
                     }
                 }
             }
-            Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
+            Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
         }
     }
 }
 
+/**
+ * 漢字強調表示コンポーネント（再生エリア用）
+ * 🌟 最速の TextMeasurer + drawWithCache 方式にアップグレード
+ */
+@OptIn(ExperimentalTextApi::class)
 @Composable
-fun KanjiMarkerArea(text: String, fontSize: TextUnit, markerColor: Color) {
-    Row(verticalAlignment = Alignment.Bottom) {
-        text.forEach { char ->
-            val kanji = char in '\u4e00'..'\u9faf'
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 0.5.dp)) {
-                Box(
-                    modifier = Modifier
-                        .width((fontSize.value * 0.7).dp)
-                        .height(4.dp)
-                        .background(if (kanji) markerColor else Color.Transparent)
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = char.toString(),
-                    fontSize = fontSize,
-                    fontWeight = if (kanji) FontWeight.Bold else FontWeight.Normal,
-                    color = Color(0xFF212529),
-                    style = androidx.compose.ui.text.TextStyle(platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false))
-                )
+fun KanjiMarkerArea(text: String, markerColor: Color) {
+    val fontSizeProvider = LocalFontSizeProvider.current
+    val textMeasurer = LocalTextMeasurer.current
+    val density = LocalDensity.current
+    
+    // スタイルとテキストをキャッシュ
+    val textStyle = remember(fontSizeProvider()) {
+        TextStyle(
+            fontSize = fontSizeProvider(),
+            fontWeight = FontWeight.Bold,
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+            textAlign = TextAlign.Center
+        )
+    }
+    
+    val annotatedString = remember(text) {
+        buildAnnotatedString {
+            text.forEach { char ->
+                val kanji = char in '\u4e00'..'\u9faf'
+                withStyle(SpanStyle(fontWeight = if (kanji) FontWeight.ExtraBold else FontWeight.Bold)) {
+                    append(char)
+                }
             }
         }
     }
+
+    Spacer(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(with(density) { (fontSizeProvider().value * 1.6).sp.toDp() })
+            .drawWithCache {
+                val layoutResult = textMeasurer.measure(
+                    text = annotatedString,
+                    style = textStyle,
+                    constraints = Constraints(maxWidth = size.width.toInt())
+                )
+                val xOffset = (size.width - layoutResult.size.width) / 2f
+                val yOffset = (size.height - layoutResult.size.height) / 2f
+                val markerHeight = 3.dp.toPx()
+                val markerGap = 2.dp.toPx()
+
+                onDrawBehind {
+                    text.forEachIndexed { i, char ->
+                        if (char in '\u4e00'..'\u9faf') {
+                            val rect = layoutResult.getBoundingBox(i)
+                            drawRect(
+                                color = markerColor,
+                                topLeft = Offset(xOffset + rect.left + rect.width * 0.1f, yOffset + rect.top - markerHeight - markerGap),
+                                size = Size(rect.width * 0.8f, markerHeight)
+                            )
+                        }
+                    }
+                    drawText(layoutResult, topLeft = Offset(xOffset, yOffset))
+                }
+            }
+    )
 }

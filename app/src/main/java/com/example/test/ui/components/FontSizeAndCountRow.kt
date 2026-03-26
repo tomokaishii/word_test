@@ -14,16 +14,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.test.ui.screens.LocalFontSizeProvider
 
 /**
  * 単語数（左端）と文字サイズ切り替えボタン（右端）を同列に配置するコンポーネント
+ * 🌟 爆速化: LocalFontSizeProvider を使用して再構築を最小限に抑制。
  */
 @Composable
 fun FontSizeAndCountRow(
     wordCount: Int,
-    currentFontSize: TextUnit,
     onFontSizeChange: (TextUnit) -> Unit
 ) {
+    val fontSizeProvider = LocalFontSizeProvider.current
+    val currentFontSize = fontSizeProvider() // 現在のサイズを取得
+
     val labelFontSize = (currentFontSize.value * 0.55).sp
     val buttonFontSize = (currentFontSize.value * 0.5).sp
 
@@ -53,6 +57,7 @@ fun FontSizeAndCountRow(
                 color = Color.Gray
             )
             
+            // 「小」と「大」のボタン表示
             listOf(20.sp to "小", 25.sp to "大").forEach { (size, label) ->
                 val active = currentFontSize == size
                 
