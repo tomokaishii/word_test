@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.test.Word
+import android.media.MediaPlayer
+import androidx.compose.runtime.remember
 
 /**
  * ずんだもんプレイヤーエリア
@@ -160,9 +162,9 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
                 }
-                
+
                 Spacer(Modifier.height(10.dp))
-                
+
                 // --- [下段] 再生コントロール ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -202,9 +204,9 @@ fun ZundamonPlayerArea(
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(10.dp))
-                
+
                 // --- [最下段] 再生速度切り替え ---
                 Row(
                     modifier = Modifier
@@ -258,7 +260,7 @@ fun KanjiMarkerArea(text: String, fontSize: androidx.compose.ui.unit.TextUnit, m
         text.forEach { char ->
             val kanji = char in '\u4e00'..'\u9faf'
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally, 
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(horizontal = 0.5.dp)
             ) {
                 Box(
