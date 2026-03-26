@@ -1,4 +1,4 @@
-package com.example.test.components
+package com.example.test.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,18 +16,15 @@ import androidx.compose.ui.zIndex
 
 /**
  * カテゴリー選択ドロップダウン
- * 🌟 全体の文字サイズ設定（fontSize）に連動するように修正しました。
  */
 @Composable
 fun CategorySelector(
     currentCategory: String,
     categories: List<String>,
-    fontSize: TextUnit, // 🌟 追加
+    fontSize: TextUnit,
     onCategorySelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
-    // カテゴリー表示の文字サイズ（全体の60%程度に調整）
     val displayFontSize = (fontSize.value * 0.6).sp
 
     Box(
@@ -50,34 +47,19 @@ fun CategorySelector(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = currentCategory, 
-                    fontSize = displayFontSize, 
-                    color = Color.White
-                )
-                Text(
-                    text = if (expanded) "▲" else "▼", 
-                    fontSize = (displayFontSize.value * 0.8).sp, 
-                    color = Color.White
-                )
+                Text(text = currentCategory, fontSize = displayFontSize, color = Color.White)
+                Text(text = if (expanded) "▲" else "▼", fontSize = (displayFontSize.value * 0.8).sp, color = Color.White)
             }
         }
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .background(Color.White)
+            modifier = Modifier.fillMaxWidth(0.9f).background(Color.White)
         ) {
             categories.forEach { category ->
                 DropdownMenuItem(
-                    text = { 
-                        Text(
-                            text = category, 
-                            fontSize = displayFontSize
-                        ) 
-                    },
+                    text = { Text(text = category, fontSize = displayFontSize) },
                     onClick = {
                         onCategorySelected(category)
                         expanded = false

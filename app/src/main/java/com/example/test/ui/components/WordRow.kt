@@ -1,4 +1,4 @@
-package com.example.test.ui.theme
+package com.example.test.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -18,15 +18,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.test.Word
+import com.example.test.data.model.Word
 
 /**
- * 漢字判定ロジック（高速化のためトップレベルに配置）
+ * 漢字判定ロジック
  */
 private fun isKanji(char: Char): Boolean = char in '\u4e00'..'\u9faf'
 
 /**
- * 【爆速仕様】漢字強調表示コンポーネント
+ * 漢字強調表示コンポーネント
  */
 @Composable
 fun KanjiMarkerText(text: String, fontSize: TextUnit, markerColor: Color) {
@@ -66,7 +66,7 @@ fun KanjiMarkerText(text: String, fontSize: TextUnit, markerColor: Color) {
 }
 
 /**
- * 単語リストの1行（最適化版）
+ * 単語リストの1行
  */
 @Composable
 fun WordRow(
@@ -76,9 +76,8 @@ fun WordRow(
     onJpClick: () -> Unit,
     onKrClick: () -> Unit
 ) {
-    // 表示アニメーションを短縮（200ms）
-    val jpAlpha by animateFloatAsState(if (word.jpHide) 1f else 0f, tween(200), label = "")
-    val krAlpha by animateFloatAsState(if (word.krHide) 1f else 0f, tween(200), label = "")
+    val jpAlpha by animateFloatAsState(if (word.jpHide) 1f else 0f, tween(200), label = "jpAlpha")
+    val krAlpha by animateFloatAsState(if (word.krHide) 1f else 0f, tween(200), label = "krAlpha")
 
     val baseStyle = remember(fontSize) {
         TextStyle(

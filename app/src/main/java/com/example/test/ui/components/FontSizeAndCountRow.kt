@@ -1,4 +1,4 @@
-package com.example.test.components
+package com.example.test.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.sp
 
 /**
  * 単語数（左端）と文字サイズ切り替えボタン（右端）を同列に配置するコンポーネント
- * 🌟 全体の文字サイズ設定に連動するように修正しました。
  */
 @Composable
 fun FontSizeAndCountRow(
@@ -25,7 +24,6 @@ fun FontSizeAndCountRow(
     currentFontSize: TextUnit,
     onFontSizeChange: (TextUnit) -> Unit
 ) {
-    // 🌟 全体の設定値（currentFontSize）を基準に、ラベルやボタンのサイズを比率計算
     val labelFontSize = (currentFontSize.value * 0.55).sp
     val buttonFontSize = (currentFontSize.value * 0.5).sp
 
@@ -39,7 +37,7 @@ fun FontSizeAndCountRow(
         // --- [左端] 単語数表示 ---
         Text(
             text = "単語数: $wordCount",
-            fontSize = labelFontSize, // 🌟 連動
+            fontSize = labelFontSize,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF495057)
         )
@@ -51,11 +49,10 @@ fun FontSizeAndCountRow(
         ) {
             Text(
                 text = "文字サイズ:",
-                fontSize = labelFontSize, // 🌟 連動
+                fontSize = labelFontSize,
                 color = Color.Gray
             )
             
-            // 「小」と「大」のボタン表示
             listOf(20.sp to "小", 25.sp to "大").forEach { (size, label) ->
                 val active = currentFontSize == size
                 
@@ -69,7 +66,7 @@ fun FontSizeAndCountRow(
                 ) {
                     Text(
                         text = label,
-                        fontSize = buttonFontSize, // 🌟 連動
+                        fontSize = buttonFontSize,
                         fontWeight = FontWeight.Bold,
                         color = if (active) Color.White else Color(0xFF495057)
                     )

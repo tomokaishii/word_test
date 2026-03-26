@@ -1,4 +1,4 @@
-package com.example.test.components
+package com.example.test.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -14,12 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.test.Word
+import com.example.test.data.model.Word // 🌟 修正: data.model.Word を使用
 
 /**
  * ずんだもんプレイヤーエリア
@@ -157,7 +156,6 @@ fun ZundamonPlayerArea(
                 
                 Spacer(Modifier.height(10.dp))
                 
-                // 🌟 再生速度ボタンの文字サイズを連動
                 Row(modifier = Modifier.fillMaxWidth().height(34.dp).background(Color(0xFFF1F3F5), RoundedCornerShape(8.dp)).padding(3.dp)) {
                     val speeds = listOf(0.8f to "ゆっくり", 1.0f to "ふつう", 1.2f to "はやい")
                     speeds.forEach { (speed, label) ->
@@ -166,21 +164,18 @@ fun ZundamonPlayerArea(
                             Text(
                                 text = label, 
                                 color = if (active) Color.White else Color(0xFF6C757D), 
-                                fontSize = (fontSize.value * 0.45).sp, // 🌟 調整
+                                fontSize = (fontSize.value * 0.45).sp,
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
                     }
                 }
             }
-            Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
+            Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
         }
     }
 }
 
-/**
- * 漢字強調表示コンポーネント（再生エリア用）
- */
 @Composable
 fun KanjiMarkerArea(text: String, fontSize: TextUnit, markerColor: Color) {
     Row(verticalAlignment = Alignment.Bottom) {

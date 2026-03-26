@@ -1,4 +1,4 @@
-package com.example.test.components
+package com.example.test.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,49 +24,27 @@ fun MainActionButtons(
     onAllKrToggle: () -> Unit,
     isAllJpHidden: Boolean,
     isAllKrHidden: Boolean,
-    fontSize: TextUnit // 🌟 全体設定を反映
+    fontSize: TextUnit
 ) {
     val jpLabel = if (isAllJpHidden) "日本語 全表示" else "日本語 全非表示"
     val krLabel = if (isAllKrHidden) "韓国語 全表示" else "韓国語 全非表示"
-    
-    // ボタン内の文字サイズ（比率で調整）
     val buttonFontSize = (fontSize.value * 0.5).sp
 
     Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = onAllJpToggle,
-                modifier = Modifier.weight(1f).height(40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFA5252)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            Button(onClick = onAllJpToggle, modifier = Modifier.weight(1f).height(40.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFA5252)), shape = RoundedCornerShape(8.dp)) {
                 Text(jpLabel, fontSize = buttonFontSize, fontWeight = FontWeight.Bold, color = Color.White)
             }
-            Button(
-                onClick = onAllKrToggle,
-                modifier = Modifier.weight(1f).height(40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF228BE6)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            Button(onClick = onAllKrToggle, modifier = Modifier.weight(1f).height(40.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF228BE6)), shape = RoundedCornerShape(8.dp)) {
                 Text(krLabel, fontSize = buttonFontSize, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = onReset,
-                modifier = Modifier.weight(1f).height(40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFAB005)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            Button(onClick = onReset, modifier = Modifier.weight(1f).height(40.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFAB005)), shape = RoundedCornerShape(8.dp)) {
                 Text("リセット", fontSize = buttonFontSize, fontWeight = FontWeight.Bold, color = Color.White)
             }
-            Button(
-                onClick = onShuffle,
-                modifier = Modifier.weight(1f).height(40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF20C997)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            Button(onClick = onShuffle, modifier = Modifier.weight(1f).height(40.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF20C997)), shape = RoundedCornerShape(8.dp)) {
                 Text("シャッフル", fontSize = buttonFontSize, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
