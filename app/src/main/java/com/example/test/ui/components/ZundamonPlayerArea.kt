@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.*
@@ -30,8 +29,7 @@ import com.example.test.ui.screens.LocalTextMeasurer
 
 /**
  * ずんだもんプレイヤーエリア
- * 再生コントロール、速度調整、現在の単語表示を行うメインコンポーネントです。
- * 🌟 爆速化: LocalFontSizeProvider を使用し、再構築を最小限に抑えています。
+ * 再生コントロール、速度調整、現在の単語表示を行うメインコンポーネントです.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,8 +50,9 @@ fun ZundamonPlayerArea(
     val fontSize = fontSizeProvider()
     
     // UI状態管理
-    var expanded by remember { mutableStateOf(false) } // ドロップダウンの開閉状態
-    var isControlsVisible by remember { mutableStateOf(true) } // コントロールパネルの表示・非表示
+    var expanded by remember { mutableStateOf(false) } 
+    var isControlsVisible by remember { mutableStateOf(true) } 
+    var showRuby by remember { mutableStateOf(false) } // ルビ表示モード
 
     Card(
         modifier = Modifier
@@ -65,71 +64,82 @@ fun ZundamonPlayerArea(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // ヘッダー：モード選択と表示切り替えボタン
+            // ヘッダー：開閉ボタンと「音声ガイド」ラベル
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = if (isControlsVisible) Arrangement.SpaceBetween else Arrangement.End
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isControlsVisible) {
-                    // 再生コンテンツ（単語/例文など）の切り替えドロップダウン
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Surface(
-                            modifier = Modifier
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .clickable { expanded = true },
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color.LightGray),
-                            color = Color.White
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = selectedDescription,
-                                    fontSize = (fontSize.value * 0.6).sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                )
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                            }
-                        }
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            descriptions.forEach { desc ->
-                                DropdownMenuItem(
-                                    text = { Text(text = desc, fontSize = (fontSize.value * 0.6).sp) },
-                                    onClick = { onDescriptionChange(desc); expanded = false },
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                    Spacer(Modifier.width(8.dp))
-                }
-                // エリアの開閉ボタン
+                // エリアの開閉ボタン（左側に配置）
                 IconButton(
                     onClick = { isControlsVisible = !isControlsVisible },
                     modifier = Modifier.size(32.dp).background(Color(0xFFF1F3F5), CircleShape)
                 ) {
                     Text(if (isControlsVisible) "︽" else "︾", color = Color.DarkGray, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
+
+                Spacer(Modifier.width(8.dp))
+
+                // 「音声ガイド」のラベル
+                Text(
+                    text = "音声ガイド",
+                    fontSize = (fontSize.value * 0.55).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF495057)
+                )
             }
 
             // 表示エリア（表示設定がONの場合のみ）
             if (isControlsVisible) {
                 Spacer(Modifier.height(8.dp))
+
+                // モード選択ドロップダウン（音声ガイドラベルの下に配置）
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { expanded = true },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color.LightGray),
+                        color = Color.White
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = selectedDescription,
+                                fontSize = (fontSize.value * 0.5).sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        }
+                    }
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        descriptions.forEach { desc ->
+                            DropdownMenuItem(
+                                text = { Text(text = desc, fontSize = (fontSize.value * 0.5).sp) },
+                                onClick = { onDescriptionChange(desc); expanded = false },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // 日本語・韓国語表示エリア（背景付き）
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -138,10 +148,11 @@ fun ZundamonPlayerArea(
                         .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 🌟 爆速描画エンジン：漢字に自動でマーカー（点）を付与
+                    // 日本語（ふりがな対応）
                     KanjiMarkerArea(
                         text = currentWord?.jp ?: "再生準備完了",
-                        markerColor = Color(0xFF228BE6)
+                        ruby = currentWord?.ruby ?: "",
+                        showRuby = showRuby
                     )
                     Spacer(Modifier.height(4.dp))
                     // 韓国語（訳語）の表示
@@ -151,6 +162,40 @@ fun ZundamonPlayerArea(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF6C757D)
                     )
+
+                    // 🌟 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = "ふりがな：",
+                                fontSize = 10.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Surface(
+                                onClick = { showRuby = !showRuby },
+                                modifier = Modifier.height(26.dp),
+                                color = if (showRuby) Color(0xFF228BE6) else Color(0xFFADB5BD),
+                                shape = RoundedCornerShape(6.dp),
+                                shadowElevation = 2.dp
+                            ) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
+                                    Text(
+                                        text = if (showRuby) "ON" else "OFF",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Spacer(Modifier.height(10.dp))
@@ -192,29 +237,37 @@ fun ZundamonPlayerArea(
                     }
                 }
             }
-            // クレジット
             Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 /**
- * 漢字強調表示コンポーネント（再生エリア用）
- * 🌟 パフォーマンス最適化：TextMeasurer と drawWithCache を使用し、直接 Canvas に描画します。
+ * 漢字強調表示コンポーネント（ルビ表示対応）
  */
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun KanjiMarkerArea(text: String, markerColor: Color) {
+fun KanjiMarkerArea(text: String, ruby: String, showRuby: Boolean) {
     val fontSizeProvider = LocalFontSizeProvider.current
     val textMeasurer = LocalTextMeasurer.current
     val density = LocalDensity.current
     
-    // 現在のフォントサイズに基づいたスタイル
+    // メインテキストのスタイル
     val textStyle = remember(fontSizeProvider()) {
         TextStyle(
             fontSize = fontSizeProvider(),
             fontWeight = FontWeight.Bold,
             platformStyle = PlatformTextStyle(includeFontPadding = false),
+            textAlign = TextAlign.Center
+        )
+    }
+
+    // ルビテキストのスタイル
+    val rubyTextStyle = remember(fontSizeProvider()) {
+        TextStyle(
+            fontSize = (fontSizeProvider().value * 0.4).sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF228BE6), // ルビの色
             textAlign = TextAlign.Center
         )
     }
@@ -235,7 +288,7 @@ fun KanjiMarkerArea(text: String, markerColor: Color) {
     Spacer(
         modifier = Modifier
             .fillMaxWidth()
-            .height(with(density) { (fontSizeProvider().value * 1.6).sp.toDp() })
+            .height(with(density) { (fontSizeProvider().value * 2.0).sp.toDp() })
             .drawWithCache {
                 // テキストのレイアウト情報を取得
                 val layoutResult = textMeasurer.measure(
@@ -243,26 +296,52 @@ fun KanjiMarkerArea(text: String, markerColor: Color) {
                     style = textStyle,
                     constraints = Constraints(maxWidth = size.width.toInt())
                 )
+
+                // カンマ区切りのルビを個別に計測
+                val rubyParts = ruby.split(",")
+                val measuredRubyParts = if (showRuby && ruby.isNotEmpty()) {
+                    rubyParts.map { part ->
+                        val trimmed = part.trim()
+                        if (trimmed.isNotEmpty()) {
+                            textMeasurer.measure(
+                                text = trimmed,
+                                style = rubyTextStyle
+                            )
+                        } else null
+                    }
+                } else emptyList()
+
                 // 中央配置用の座標計算
                 val xOffset = (size.width - layoutResult.size.width) / 2f
-                val yOffset = (size.height - layoutResult.size.height) / 2f
-                val markerHeight = 3.dp.toPx()
-                val markerGap = 2.dp.toPx()
+                val yOffset = (size.height - layoutResult.size.height) / 0.7f
 
                 onDrawBehind {
-                    // 各文字をチェックし、漢字の場合はその上にマーカー（四角形）を描画
+                    var kanjiCounter = 0
+                    // 各文字をチェックし、漢字の場合はルビを描画
                     text.forEachIndexed { i, char ->
                         if (char in '\u4e00'..'\u9faf') {
                             val rect = layoutResult.getBoundingBox(i)
-                            drawRect(
-                                color = markerColor,
-                                topLeft = Offset(xOffset + rect.left + rect.width * 0.1f, yOffset + rect.top - markerHeight - markerGap),
-                                size = Size(rect.width * 0.8f, markerHeight)
-                            )
+                            val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
+                            
+                            if (showRuby && currentRubyLayout != null) {
+                                // 🌟 漢字の「少し上」にルビを描画
+                                // オフセットをマイナスにすることで漢字より上の位置に配置
+                                val ry = (yOffset + rect.top - (rect.height * 0.15f)).toFloat()
+                                val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
+                                drawText(
+                                    textLayoutResult = currentRubyLayout, 
+                                    topLeft = Offset(x = rx, y = ry)
+                                )
+                            }
+                            kanjiCounter++
                         }
                     }
-                    // テキスト自体を描画
-                    drawText(layoutResult, topLeft = Offset(xOffset, yOffset))
+
+                    // テキスト本体を描画
+                    drawText(
+                        textLayoutResult = layoutResult, 
+                        topLeft = Offset(x = xOffset.toFloat(), y = yOffset.toFloat())
+                    )
                 }
             }
     )
