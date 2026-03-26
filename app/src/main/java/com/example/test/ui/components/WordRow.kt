@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.*
@@ -31,16 +30,40 @@ import com.example.test.ui.screens.LocalTextMeasurer
 private fun isKanji(char: Char): Boolean = char in '\u4e00'..'\u9faf'
 
 /**
- * 【究極爆速エンジン】
- * 🌟 状態読み取りを遅延させ、描画レイヤーのみでサイズを反映します。
+ * 日本語表示コンポーネント（ルビ表示対応）
+ * 🌟 手動調整用パラメータ:
+ * @param heightMultiplier 枠自体の高さの倍率（数値を大きくすると枠が広がる）
+ * @param yOffsetBias 垂直方向の表示位置（数値を小さくするとテキストが下に移動する）
  */
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun KanjiMarkerText(text: String, markerColor: Color) {
+fun KanjiMarkerText(
+    text: String, 
+    ruby: String, 
+    heightMultiplier: Float = 2.5f,
+    yOffsetBias: Float = 2.2f
+) {
     val fontSizeProvider = LocalFontSizeProvider.current
     val textMeasurer = LocalTextMeasurer.current
     val density = LocalDensity.current
     
+    val textStyle = remember(fontSizeProvider()) {
+        TextStyle(
+            fontSize = fontSizeProvider(),
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+            textAlign = TextAlign.Center
+        )
+    }
+
+    val rubyTextStyle = remember(fontSizeProvider()) {
+        TextStyle(
+            fontSize = (fontSizeProvider().value * 0.4).sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF228BE6),
+            textAlign = TextAlign.Center
+        )
+    }
+
     val annotatedString = remember(text) {
         buildAnnotatedString {
             text.forEach { char ->
@@ -51,39 +74,52 @@ fun KanjiMarkerText(text: String, markerColor: Color) {
             }
         }
     }
-    val kanjiIndices = remember(text) { text.indices.filter { isKanji(text[it]) } }
 
     Spacer(
         modifier = Modifier
             .fillMaxWidth()
-            .height(with(density) { (fontSizeProvider().value * 1.6).sp.toDp() })
+            .height(with(density) { (fontSizeProvider().value * heightMultiplier).sp.toDp() })
             .drawWithCache {
-                val currentSize = fontSizeProvider()
-                val textStyle = TextStyle(
-                    fontSize = currentSize, 
-                    platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    textAlign = TextAlign.Center
-                )
-                
                 val layoutResult = textMeasurer.measure(
                     text = annotatedString,
                     style = textStyle,
                     constraints = Constraints(maxWidth = size.width.toInt())
                 )
-                val xOffset = (size.width - layoutResult.size.width) / 2f
-                val yOffset = (size.height - layoutResult.size.height) / 2f
-                val mHeight = 3.dp.toPx()
-                val mGap = 2.dp.toPx()
 
-                val markerRects = kanjiIndices.map { i ->
-                    val rect = layoutResult.getBoundingBox(i)
-                    Offset(xOffset + rect.left + rect.width * 0.1f, yOffset + rect.top - mHeight - mGap) to 
-                    Size(rect.width * 0.8f, mHeight)
+                val rubyParts = ruby.split(",")
+                val measuredRubyParts = rubyParts.map { part ->
+                    val trimmed = part.trim()
+                    if (trimmed.isNotEmpty()) {
+                        textMeasurer.measure(text = trimmed, style = rubyTextStyle)
+                    } else null
                 }
 
+                val xOffset = (size.width - layoutResult.size.width) / 2f
+                val yOffset = (size.height - layoutResult.size.height) / yOffsetBias
+
                 onDrawBehind {
-                    markerRects.forEach { (pos, sz) -> drawRect(color = markerColor, topLeft = pos, size = sz) }
-                    drawText(layoutResult, topLeft = Offset(xOffset, yOffset))
+                    var kanjiCounter = 0
+                    text.forEachIndexed { i, char ->
+                        if (isKanji(char)) {
+                            val rect = layoutResult.getBoundingBox(i)
+                            val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
+                            
+                            if (currentRubyLayout != null) {
+                                // 🌟 ルビの位置をさらに高く（-0.15f -> -0.35f）
+                                val ry = (yOffset + rect.top - (rect.height * 0.35f)).toFloat()
+                                val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
+                                drawText(
+                                    textLayoutResult = currentRubyLayout,
+                                    topLeft = Offset(x = rx, y = ry)
+                                )
+                            }
+                            kanjiCounter++
+                        }
+                    }
+                    drawText(
+                        textLayoutResult = layoutResult,
+                        topLeft = Offset(x = xOffset.toFloat(), y = yOffset.toFloat())
+                    )
                 }
             }
     )
@@ -109,14 +145,19 @@ fun WordRow(
             .height(IntrinsicSize.Min)
             .border(0.5.dp, Color(0xFFE9ECEF))
             .background(Color.White)
-            .padding(vertical = 4.dp, horizontal = 12.dp)
+            .padding(vertical = 10.dp, horizontal = 12.dp)
     ) {
         Box(Modifier.width(40.dp).fillMaxHeight(), Alignment.Center) {
             Text(text = "${index + 1}", fontSize = (fontSizeProvider().value * 0.5).sp, color = Color.Gray)
         }
 
         Box(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onJpClick), Alignment.Center) {
-            KanjiMarkerText(word.jp, Color(0xFF228BE6))
+            KanjiMarkerText(
+                text = word.jp, 
+                ruby = word.ruby,
+                heightMultiplier = 2.5f,
+                yOffsetBias = 2.2f
+            )
             if (jpAlpha > 0f) {
                 Box(Modifier.matchParentSize().padding(2.dp).background(Color(0xFFADB5BD).copy(alpha = jpAlpha)))
             }

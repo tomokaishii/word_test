@@ -44,7 +44,7 @@ fun LevelTabs(
             val isSelected = level.trim() == currentLevel.trim()
             Box(
                 modifier = Modifier
-                    .weight(1f).height(54.dp)
+                    .weight(1f).height(35.dp)
                     .background(if (isSelected) Color(0xFF1E3A8A) else Color.Transparent)
                     .clickable { if (!isSelected && level.isNotBlank()) onLevelSelected(level) },
                 contentAlignment = Alignment.Center

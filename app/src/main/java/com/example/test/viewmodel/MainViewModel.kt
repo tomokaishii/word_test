@@ -32,11 +32,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var playbackSpeed by mutableFloatStateOf(1.0f) // 再生速度（0.8x, 1.0x, 1.2x）
     var currentPlayingIndex by mutableIntStateOf(0) // 現在の再生対象（または注目対象）の単語インデックス
     var selectedDescription by mutableStateOf("単語帳の説明") // 再生モード
-    var fontSize by mutableStateOf(25) // アプリ全体の文字サイズ
+    var fontSize by mutableStateOf(20) // 🌟 修正: 初期サイズを 20 (小) に変更
 
     /**
      * 表示対象の単語リスト。
-     * mutableStateListOf を使用することで、リストの追加・削除・変更が即座にUIに反映されます。
+     * mutableStateListOf を使用することで、リストの追加・削除・変更が即即にUIに反映されます。
      */
     val wordList = mutableStateListOf<Word>()
     

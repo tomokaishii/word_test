@@ -43,7 +43,7 @@ fun LevelTabs(
                 Spacer(
                     modifier = Modifier
                         .width(1.dp)
-                        .height(50.dp)
+                        .height(40.dp) // 🌟 縦幅を少し短く (50.dp -> 40.dp)
                         .background(Color.White.copy(alpha = 0.5f))
                 )
             }
@@ -53,7 +53,7 @@ fun LevelTabs(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(54.dp)
+                    .height(44.dp) // 🌟 縦幅を少し短く (54.dp -> 44.dp)
                     .background(if (isSelected) Color(0xFF1E3A8A) else Color.Transparent)
                     .clickable {
                         if (!isSelected && level.isNotBlank()) {

@@ -29,7 +29,7 @@ import com.example.test.ui.screens.LocalTextMeasurer
 
 /**
  * ずんだもんプレイヤーエリア
- * 再生コントロール、速度調整、現在の単語表示を行うメインコンポーネントです.
+ * 再生コントロール、速度調整、現在の単語表示を行うメインコンポーネントです。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +51,8 @@ fun ZundamonPlayerArea(
     
     // UI状態管理
     var expanded by remember { mutableStateOf(false) } 
-    var isControlsVisible by remember { mutableStateOf(true) } 
+    // 🌟 修正: 初期表示を非表示 (false) に設定
+    var isControlsVisible by remember { mutableStateOf(false) } 
     var showRuby by remember { mutableStateOf(false) } // ルビ表示モード
 
     Card(
@@ -154,7 +155,10 @@ fun ZundamonPlayerArea(
                         ruby = currentWord?.ruby ?: "",
                         showRuby = showRuby
                     )
-                    Spacer(Modifier.height(4.dp))
+                    
+                    // 日本語と韓国語の間隔
+                    Spacer(Modifier.height(12.dp))
+                    
                     // 韓国語（訳語）の表示
                     Text(
                         text = currentWord?.kr ?: "---",
@@ -163,7 +167,7 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
 
-                    // 🌟 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
+                    // 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.BottomEnd
@@ -288,7 +292,7 @@ fun KanjiMarkerArea(text: String, ruby: String, showRuby: Boolean) {
     Spacer(
         modifier = Modifier
             .fillMaxWidth()
-            .height(with(density) { (fontSizeProvider().value * 2.0).sp.toDp() })
+            .height(with(density) { (fontSizeProvider().value * 2.5).sp.toDp() })
             .drawWithCache {
                 // テキストのレイアウト情報を取得
                 val layoutResult = textMeasurer.measure(
@@ -324,9 +328,8 @@ fun KanjiMarkerArea(text: String, ruby: String, showRuby: Boolean) {
                             val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
                             
                             if (showRuby && currentRubyLayout != null) {
-                                // 🌟 漢字の「少し上」にルビを描画
-                                // オフセットをマイナスにすることで漢字より上の位置に配置
-                                val ry = (yOffset + rect.top - (rect.height * 0.15f)).toFloat()
+                                // 🌟 漢字の「真上」にルビを描画
+                                val ry = (yOffset + rect.top - (rect.height * 0.35f)).toFloat()
                                 val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
                                 drawText(
                                     textLayoutResult = currentRubyLayout, 
