@@ -11,49 +11,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
  * 学習レベル選択タブ (JLPT N5 〜 N1)
- * ユーザーが学習したいレベルを選択するためのUIコンポーネントです。
- * 
- * @param currentLevel 現在選択されているレベル名
- * @param onLevelSelected レベルが選択されたときに実行されるコールバック関数
  */
 @Composable
 fun LevelTabs(
     currentLevel: String,
+    fontSize: TextUnit, // 🌟 全体のフォントサイズ設定を受け取る
     onLevelSelected: (String) -> Unit
 ) {
-    // XMLからレベルリスト（N1~N5）を直接取得
     val levels = stringArrayResource(R.array.levels_array).toList()
 
-    // 🌟 データが空の場合、arrays_level.xml の levels_array_err からエラー文言を取得してログ出力
     if (levels.isEmpty()) {
-
-        // arrays_level.xml の levels_array_err からエラーメッセージを取得
         val errorMsg = stringArrayResource(R.array.levels_array_err).firstOrNull()
-
-        // nullチェック（念のため）
-        if (errorMsg != null) {
-            Log.e("LevelTabs", errorMsg)
-        }
-
+        if (errorMsg != null) { Log.e("LevelTabs", errorMsg) }
         return
     }
 
-    // タブ全体を横に並べるコンテナ
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF495057)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 各レベルをループで描画
         levels.forEachIndexed { index, level ->
-            
-            // 1mm相当（1dp）の白い縦線を追加
             if (index > 0) {
                 Spacer(
                     modifier = Modifier
@@ -65,7 +50,6 @@ fun LevelTabs(
 
             val isSelected = level.trim() == currentLevel.trim()
 
-            // 各タブの表示とクリック領域
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -81,7 +65,7 @@ fun LevelTabs(
                 Text(
                     text = level,
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = (fontSize.value * 0.65).sp, // 🌟 全体設定に連動
                     fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium
                 )
 

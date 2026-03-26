@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -22,7 +23,6 @@ import com.example.test.Word
 
 /**
  * ずんだもんプレイヤーエリア
- * 音声再生コントロール、再生速度変更、現在の単語表示などを行います。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,8 +30,9 @@ fun ZundamonPlayerArea(
     isPlaying: Boolean,
     currentSpeed: Float,
     selectedDescription: String,
-    descriptions: List<String>,
+    descriptions: List<String> = listOf("単語帳の説明", "単語の発音", "例文の発音"),
     currentWord: Word?,
+    fontSize: TextUnit,
     onDescriptionChange: (String) -> Unit,
     onPlayPause: () -> Unit,
     onSpeedChange: (Float) -> Unit,
@@ -51,7 +52,6 @@ fun ZundamonPlayerArea(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // --- [上段] メニューと表示切替 ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -67,46 +67,34 @@ fun ZundamonPlayerArea(
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth()
-                                .height(48.dp) // 適度な高さ
+                                .height(48.dp)
                                 .clickable { expanded = true },
                             shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(1.dp, Color.LightGray),
                             color = Color.White
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 12.dp),
+                                modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                // 🌟 内部のテキスト配置を「普通」にする（中央寄せ）
                                 Text(
                                     text = selectedDescription,
-                                    fontSize = 14.sp, 
+                                    fontSize = (fontSize.value * 0.6).sp,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black
                                 )
-                                
-                                // 下向き矢印アイコン
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             }
                         }
 
-                        // ドロップダウンメニュー本体
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
                             descriptions.forEach { desc ->
                                 DropdownMenuItem(
-                                    text = { 
-                                        Text(
-                                            text = desc, 
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium
-                                        ) 
-                                    },
+                                    text = { Text(text = desc, fontSize = (fontSize.value * 0.6).sp) },
                                     onClick = { onDescriptionChange(desc); expanded = false },
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                                 )
@@ -115,25 +103,16 @@ fun ZundamonPlayerArea(
                     }
                     Spacer(Modifier.width(8.dp))
                 }
-                // 表示・非表示の切り替えボタン
                 IconButton(
                     onClick = { isControlsVisible = !isControlsVisible },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(Color(0xFFF1F3F5), CircleShape)
+                    modifier = Modifier.size(32.dp).background(Color(0xFFF1F3F5), CircleShape)
                 ) {
-                    Text(
-                        if (isControlsVisible) "︾" else "︽",
-                        color = Color.DarkGray,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(if (isControlsVisible) "︾" else "︽", color = Color.DarkGray, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             if (isControlsVisible) {
                 Spacer(Modifier.height(8.dp))
-                // --- [中段] 単語表示エリア ---
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -144,13 +123,13 @@ fun ZundamonPlayerArea(
                 ) {
                     KanjiMarkerArea(
                         text = currentWord?.jp ?: "再生準備完了",
-                        fontSize = 18.sp,
+                        fontSize = fontSize,
                         markerColor = Color(0xFF228BE6)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = currentWord?.kr ?: "---",
-                        fontSize = 14.sp,
+                        fontSize = (fontSize.value * 0.7).sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF6C757D)
                     )
@@ -158,109 +137,60 @@ fun ZundamonPlayerArea(
                 
                 Spacer(Modifier.height(10.dp))
                 
-                // --- [下段] 再生コントロール ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        onClick = onPrev,
-                        modifier = Modifier.size(44.dp),
-                        color = Color(0xFF2ED573),
-                        shape = RoundedCornerShape(10.dp),
-                        shadowElevation = 4.dp) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("◀", color = Color.White, fontSize = 16.sp)
-                        }
+                    Surface(onClick = onPrev, modifier = Modifier.size(44.dp), color = Color(0xFF2ED573), shape = RoundedCornerShape(10.dp), shadowElevation = 4.dp) {
+                        Box(contentAlignment = Alignment.Center) { Text("◀", color = Color.White, fontSize = 16.sp) }
                     }
                     Spacer(Modifier.width(24.dp))
-                    Surface(
-                        onClick = onPlayPause,
-                        modifier = Modifier.size(54.dp),
-                        color = Color(0xFF2ED573),
-                        shape = RoundedCornerShape(12.dp),
-                        shadowElevation = 6.dp) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(if (isPlaying) "⏸" else "▶", color = Color.White, fontSize = 24.sp)
-                        }
+                    Surface(onClick = onPlayPause, modifier = Modifier.size(54.dp), color = Color(0xFF2ED573), shape = RoundedCornerShape(12.dp), shadowElevation = 6.dp) {
+                        Box(contentAlignment = Alignment.Center) { Text(if (isPlaying) "⏸" else "▶", color = Color.White, fontSize = 24.sp) }
                     }
                     Spacer(Modifier.width(24.dp))
-                    Surface(
-                        onClick = onNext,
-                        modifier = Modifier.size(44.dp),
-                        color = Color(0xFF2ED573),
-                        shape = RoundedCornerShape(10.dp),
-                        shadowElevation = 4.dp) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("▶", color = Color.White, fontSize = 16.sp)
-                        }
+                    Surface(onClick = onNext, modifier = Modifier.size(44.dp), color = Color(0xFF2ED573), shape = RoundedCornerShape(10.dp), shadowElevation = 4.dp) {
+                        Box(contentAlignment = Alignment.Center) { Text("▶", color = Color.White, fontSize = 16.sp) }
                     }
                 }
                 
                 Spacer(Modifier.height(10.dp))
                 
-                // --- [最下段] 再生速度切り替え ---
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(34.dp)
-                        .background(Color(0xFFF1F3F5), RoundedCornerShape(8.dp))
-                        .padding(3.dp)
-                ) {
+                // 🌟 再生速度ボタンの文字サイズを連動
+                Row(modifier = Modifier.fillMaxWidth().height(34.dp).background(Color(0xFFF1F3F5), RoundedCornerShape(8.dp)).padding(3.dp)) {
                     val speeds = listOf(0.8f to "ゆっくり", 1.0f to "ふつう", 1.2f to "はやい")
                     speeds.forEach { (speed, label) ->
                         val active = currentSpeed == speed
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (active) Color(0xFF2ED573) else Color.Transparent)
-                                .clickable { onSpeedChange(speed) },
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(if (active) Color(0xFF2ED573) else Color.Transparent).clickable { onSpeedChange(speed) }, contentAlignment = Alignment.Center) {
                             Text(
-                                label,
-                                color = if (active) Color.White else Color(0xFF6C757D),
-                                fontSize = 10.sp,
+                                text = label, 
+                                color = if (active) Color.White else Color(0xFF6C757D), 
+                                fontSize = (fontSize.value * 0.45).sp, // 🌟 調整
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
                     }
                 }
             }
-            // クレジット表記
-            Text(
-                "VOICEVOX:ずんだもん",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
-                textAlign = TextAlign.End,
-                fontSize = 9.sp,
-                color = Color.LightGray,
-                fontWeight = FontWeight.Medium
-            )
+            Text("VOICEVOX:ずんだもん", modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = TextAlign.End, fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 /**
- * 漢字強調表示コンポーネント
+ * 漢字強調表示コンポーネント（再生エリア用）
  */
 @Composable
-fun KanjiMarkerArea(text: String, fontSize: androidx.compose.ui.unit.TextUnit, markerColor: Color) {
+fun KanjiMarkerArea(text: String, fontSize: TextUnit, markerColor: Color) {
     Row(verticalAlignment = Alignment.Bottom) {
         text.forEach { char ->
             val kanji = char in '\u4e00'..'\u9faf'
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally, 
-                modifier = Modifier.padding(horizontal = 0.5.dp)
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 0.5.dp)) {
                 Box(
                     modifier = Modifier
-                        .width((fontSize.value * 0.7).dp) 
-                        .height(4.dp) 
+                        .width((fontSize.value * 0.7).dp)
+                        .height(4.dp)
                         .background(if (kanji) markerColor else Color.Transparent)
                 )
                 Spacer(Modifier.height(2.dp))
@@ -268,7 +198,8 @@ fun KanjiMarkerArea(text: String, fontSize: androidx.compose.ui.unit.TextUnit, m
                     text = char.toString(),
                     fontSize = fontSize,
                     fontWeight = if (kanji) FontWeight.Bold else FontWeight.Normal,
-                    color = Color(0xFF212529)
+                    color = Color(0xFF212529),
+                    style = androidx.compose.ui.text.TextStyle(platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false))
                 )
             }
         }

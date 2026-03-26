@@ -9,29 +9,37 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 
+/**
+ * カテゴリー選択ドロップダウン
+ * 🌟 全体の文字サイズ設定（fontSize）に連動するように修正しました。
+ */
 @Composable
 fun CategorySelector(
     currentCategory: String,
     categories: List<String>,
+    fontSize: TextUnit, // 🌟 追加
     onCategorySelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    
+    // カテゴリー表示の文字サイズ（全体の60%程度に調整）
+    val displayFontSize = (fontSize.value * 0.6).sp
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .zIndex(100f) // 🌟 他の要素より確実に前面に
+            .zIndex(100f)
     ) {
-        // メインの表示エリア（ボタン）
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp) // 🌟 ボタンを小さく
+                .height(40.dp)
                 .clickable { expanded = !expanded },
             color = Color(0xFF1E3A8A),
             shape = RoundedCornerShape(8.dp),
@@ -42,22 +50,34 @@ fun CategorySelector(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = currentCategory, fontSize = 14.sp, color = Color.White)
-                Text(text = if (expanded) "▲" else "▼", fontSize = 12.sp, color = Color.White)
+                Text(
+                    text = currentCategory, 
+                    fontSize = displayFontSize, 
+                    color = Color.White
+                )
+                Text(
+                    text = if (expanded) "▲" else "▼", 
+                    fontSize = (displayFontSize.value * 0.8).sp, 
+                    color = Color.White
+                )
             }
         }
 
-        // 🌟 DropdownMenu を使うことで、下のコンテンツを押し下げずに「浮かせる」
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .fillMaxWidth(0.9f) // 画面幅に合わせる
+                .fillMaxWidth(0.9f)
                 .background(Color.White)
         ) {
             categories.forEach { category ->
                 DropdownMenuItem(
-                    text = { Text(category, fontSize = 14.sp) },
+                    text = { 
+                        Text(
+                            text = category, 
+                            fontSize = displayFontSize
+                        ) 
+                    },
                     onClick = {
                         onCategorySelected(category)
                         expanded = false

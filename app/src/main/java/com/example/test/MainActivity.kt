@@ -65,30 +65,40 @@ fun MainScreen(vm: MainViewModel) {
             Column(modifier = Modifier.fillMaxWidth().background(Color(0xFFF8F9FA))) {
                 
                 // 1. レベル選択タブ (N1~N5)
-                LevelTabs(vm.currentLevel) { vm.updateLevel(it) }
+                // 🌟 全体の文字サイズ設定を反映
+                LevelTabs(vm.currentLevel, vm.fontSize.sp) { vm.updateLevel(it) }
                 
                 // 2. カテゴリー選択ドロップダウン
-                CategorySelector(vm.currentCategory, vm.categories) { vm.updateCategory(it) }
+                // 🌟 全体の文字サイズ設定を反映
+                CategorySelector(
+                    currentCategory = vm.currentCategory,
+                    categories = vm.categories,
+                    fontSize = vm.fontSize.sp,
+                    onCategorySelected = { vm.updateCategory(it) }
+                )
                 
                 Spacer(Modifier.height(10.dp))
 
                 // 3. 一括操作ボタン群
+                // 🌟 全体の文字サイズ設定を反映
                 MainActionButtons(
                     onShuffle = { vm.shuffle() },
                     onReset = { vm.loadWords() },
                     onAllJpToggle = { vm.toggleAllJp() },
                     onAllKrToggle = { vm.toggleAllKr() },
-                    jpLabel = if (vm.allJpHidden) "日本語 全表示" else "日本語 全非表示",
-                    krLabel = if (vm.allKrHidden) "韓国語 全表示" else "韓国語 全非表示"
+                    isAllJpHidden = vm.allJpHidden,
+                    isAllKrHidden = vm.allKrHidden,
+                    fontSize = vm.fontSize.sp
                 )
 
                 // 4. ずんだもんプレイヤー
+                // 🌟 すでに vm.fontSize.sp を渡しているが、内部パーツも連動するように調整
                 ZundamonPlayerArea(
                     isPlaying = vm.isPlaying,
                     currentSpeed = vm.playbackSpeed,
                     selectedDescription = vm.selectedDescription,
-                    descriptions = listOf("単語帳の説明", "単語の発音", "例文の発音"),
                     currentWord = vm.wordList.getOrNull(vm.currentPlayingIndex),
+                    fontSize = vm.fontSize.sp,
                     onDescriptionChange = { vm.selectedDescription = it },
                     onPlayPause = { vm.togglePlay() },
                     onSpeedChange = { playbackSpeed -> vm.playbackSpeed = playbackSpeed },
@@ -96,11 +106,18 @@ fun MainScreen(vm: MainViewModel) {
                     onPrev = { vm.prev() }
                 )
 
-                // 5. 文字サイズ調整
-                FontSizeAndCountRow(vm.wordList.size, vm.fontSize.sp) { vm.fontSize = it.value.toInt() }
+                // 5. 単語数表示と文字サイズ調整ボタン
+                FontSizeAndCountRow(
+                    wordCount = vm.wordList.size,
+                    currentFontSize = vm.fontSize.sp,
+                    onFontSizeChange = { vm.fontSize = it.value.toInt() }
+                )
                 
                 Spacer(Modifier.height(4.dp))
-                WordTableHeader()
+                
+                // 6. テーブルヘッダー
+                // 🌟 ここにも文字サイズを反映させる
+                WordTableHeader(vm.fontSize.sp)
             }
         }
 
