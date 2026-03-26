@@ -9,23 +9,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.test.ui.screens.LocalFontSizeProvider
 
 /**
  * カテゴリー選択ドロップダウン
+ * 🌟 爆速化: LocalFontSizeProvider からサイズ取得関数を取得し、再構築を最小限に。
  */
 @Composable
 fun CategorySelector(
     currentCategory: String,
     categories: List<String>,
-    fontSize: TextUnit,
     onCategorySelected: (String) -> Unit
 ) {
+    val fontSizeProvider = LocalFontSizeProvider.current
     var expanded by remember { mutableStateOf(false) }
-    val displayFontSize = (fontSize.value * 0.6).sp
+    
+    // 文字サイズを関数から取得
+    val displayFontSize = (fontSizeProvider().value * 0.6).sp
 
     Box(
         modifier = Modifier

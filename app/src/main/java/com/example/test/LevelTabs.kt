@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.test.ui.screens.LocalFontSizeProvider
 
 /**
  * 学習レベル選択タブ (JLPT N5 〜 N1)
@@ -21,9 +21,9 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun LevelTabs(
     currentLevel: String,
-    fontSize: TextUnit, // 🌟 全体のフォントサイズ設定を受け取る
     onLevelSelected: (String) -> Unit
 ) {
+    val fontSizeProvider = LocalFontSizeProvider.current
     val levels = stringArrayResource(R.array.levels_array).toList()
 
     if (levels.isEmpty()) {
@@ -62,6 +62,7 @@ fun LevelTabs(
                     },
                 contentAlignment = Alignment.Center
             ) {
+                val fontSize = fontSizeProvider()
                 Text(
                     text = level,
                     color = Color.White,

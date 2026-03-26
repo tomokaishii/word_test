@@ -11,43 +11,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.test.R
+import com.example.test.ui.screens.LocalFontSizeProvider
 
 /**
  * 学習レベル選択タブ
+ * 🌟 爆速化: LocalFontSizeProviderからサイズ取得関数を取得し、描画フェーズで解決。
  */
 @Composable
 fun LevelTabs(
     currentLevel: String,
-    fontSize: TextUnit,
     onLevelSelected: (String) -> Unit
 ) {
-    val levels = stringArrayResource(R.array.levels_array).toList()
+    // 🌟 修正箇所: LocalFontSize ではなく LocalFontSizeProvider を使用
+    val fontSizeProvider = LocalFontSizeProvider.current
+    
+    val levels = stringArrayResource(R.array.levels_array)
+    val levelsList = remember(levels) { levels.toList() }
 
-    if (levels.isEmpty()) {
-        val errorMsg = stringArrayResource(R.array.levels_array_err).firstOrNull() ?: "Error"
-        Log.e("LevelTabs", errorMsg)
-        return
-    }
+    if (levelsList.isEmpty()) return
 
     Row(
         modifier = Modifier.fillMaxWidth().background(Color(0xFF495057)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        levels.forEachIndexed { index, level ->
+        levelsList.forEachIndexed { index, level ->
             if (index > 0) {
-                Spacer(modifier = Modifier.width(1.dp).height(50.dp).background(Color.White.copy(alpha = 0.5f)))
+                Spacer(modifier = Modifier.width(1.dp).height(30.dp).background(Color.White.copy(alpha = 0.3f)))
             }
-
             val isSelected = level.trim() == currentLevel.trim()
-
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(54.dp)
+                    .weight(1f).height(54.dp)
                     .background(if (isSelected) Color(0xFF1E3A8A) else Color.Transparent)
                     .clickable { if (!isSelected && level.isNotBlank()) onLevelSelected(level) },
                 contentAlignment = Alignment.Center
@@ -55,7 +52,8 @@ fun LevelTabs(
                 Text(
                     text = level,
                     color = Color.White,
-                    fontSize = (fontSize.value * 0.65).sp,
+                    // 🌟 ラムダを呼び出して最新のサイズを取得
+                    fontSize = (fontSizeProvider().value * 0.6).sp,
                     fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium
                 )
                 if (isSelected) {

@@ -10,59 +10,83 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.test.data.model.Word
+import com.example.test.ui.screens.LocalFontSizeProvider
+import com.example.test.ui.screens.LocalTextMeasurer
 
 /**
- * 漢字判定ロジック
+ * 漢字判定
  */
 private fun isKanji(char: Char): Boolean = char in '\u4e00'..'\u9faf'
 
 /**
- * 漢字強調表示コンポーネント
+ * 【究極爆速エンジン】
+ * 🌟 状態読み取りを遅延させ、描画レイヤーのみでサイズを反映します。
  */
+@OptIn(ExperimentalTextApi::class)
 @Composable
-fun KanjiMarkerText(text: String, fontSize: TextUnit, markerColor: Color) {
-    val textStyle = remember(fontSize) {
-        TextStyle(
-            fontSize = fontSize,
-            platformStyle = PlatformTextStyle(includeFontPadding = false),
-            textAlign = TextAlign.Center
-        )
-    }
-
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.wrapContentHeight()
-    ) {
-        text.forEach { char ->
-            val kanji = isKanji(char)
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 0.5.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width((fontSize.value * 0.7).dp)
-                        .height(4.dp)
-                        .background(if (kanji) markerColor else Color.Transparent)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = char.toString(),
-                    style = textStyle.copy(fontWeight = if (kanji) FontWeight.Bold else FontWeight.Normal)
-                )
+fun KanjiMarkerText(text: String, markerColor: Color) {
+    val fontSizeProvider = LocalFontSizeProvider.current
+    val textMeasurer = LocalTextMeasurer.current
+    val density = LocalDensity.current
+    
+    val annotatedString = remember(text) {
+        buildAnnotatedString {
+            text.forEach { char ->
+                val kanji = isKanji(char)
+                withStyle(SpanStyle(fontWeight = if (kanji) FontWeight.ExtraBold else FontWeight.Bold)) {
+                    append(char)
+                }
             }
         }
     }
+    val kanjiIndices = remember(text) { text.indices.filter { isKanji(text[it]) } }
+
+    Spacer(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(with(density) { (fontSizeProvider().value * 1.6).sp.toDp() })
+            .drawWithCache {
+                val currentSize = fontSizeProvider()
+                val textStyle = TextStyle(
+                    fontSize = currentSize, 
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    textAlign = TextAlign.Center
+                )
+                
+                val layoutResult = textMeasurer.measure(
+                    text = annotatedString,
+                    style = textStyle,
+                    constraints = Constraints(maxWidth = size.width.toInt())
+                )
+                val xOffset = (size.width - layoutResult.size.width) / 2f
+                val yOffset = (size.height - layoutResult.size.height) / 2f
+                val mHeight = 3.dp.toPx()
+                val mGap = 2.dp.toPx()
+
+                val markerRects = kanjiIndices.map { i ->
+                    val rect = layoutResult.getBoundingBox(i)
+                    Offset(xOffset + rect.left + rect.width * 0.1f, yOffset + rect.top - mHeight - mGap) to 
+                    Size(rect.width * 0.8f, mHeight)
+                }
+
+                onDrawBehind {
+                    markerRects.forEach { (pos, sz) -> drawRect(color = markerColor, topLeft = pos, size = sz) }
+                    drawText(layoutResult, topLeft = Offset(xOffset, yOffset))
+                }
+            }
+    )
 }
 
 /**
@@ -72,21 +96,12 @@ fun KanjiMarkerText(text: String, fontSize: TextUnit, markerColor: Color) {
 fun WordRow(
     index: Int,
     word: Word,
-    fontSize: TextUnit,
     onJpClick: () -> Unit,
     onKrClick: () -> Unit
 ) {
-    val jpAlpha by animateFloatAsState(if (word.jpHide) 1f else 0f, tween(200), label = "jpAlpha")
-    val krAlpha by animateFloatAsState(if (word.krHide) 1f else 0f, tween(200), label = "krAlpha")
-
-    val baseStyle = remember(fontSize) {
-        TextStyle(
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            platformStyle = PlatformTextStyle(includeFontPadding = false)
-        )
-    }
+    val fontSizeProvider = LocalFontSizeProvider.current
+    val jpAlpha by animateFloatAsState(if (word.jpHide) 1f else 0f, tween(100), label = "jpAlpha")
+    val krAlpha by animateFloatAsState(if (word.krHide) 1f else 0f, tween(100), label = "krAlpha")
 
     Row(
         modifier = Modifier
@@ -94,14 +109,14 @@ fun WordRow(
             .height(IntrinsicSize.Min)
             .border(0.5.dp, Color(0xFFE9ECEF))
             .background(Color.White)
-            .padding(vertical = 10.dp, horizontal = 12.dp)
+            .padding(vertical = 4.dp, horizontal = 12.dp)
     ) {
         Box(Modifier.width(40.dp).fillMaxHeight(), Alignment.Center) {
-            Text(text = "${index + 1}", fontSize = (fontSize.value * 0.5).sp, color = Color.Gray)
+            Text(text = "${index + 1}", fontSize = (fontSizeProvider().value * 0.5).sp, color = Color.Gray)
         }
 
         Box(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onJpClick), Alignment.Center) {
-            KanjiMarkerText(text = word.jp, fontSize = fontSize, markerColor = Color(0xFF228BE6))
+            KanjiMarkerText(word.jp, Color(0xFF228BE6))
             if (jpAlpha > 0f) {
                 Box(Modifier.matchParentSize().padding(2.dp).background(Color(0xFFADB5BD).copy(alpha = jpAlpha)))
             }
@@ -110,7 +125,10 @@ fun WordRow(
         Box(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onKrClick), Alignment.Center) {
             Text(
                 text = word.kr,
-                style = baseStyle
+                fontSize = fontSizeProvider(),
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(textAlign = TextAlign.Center, platformStyle = PlatformTextStyle(false)),
+                modifier = Modifier.padding(vertical = 6.dp)
             )
             if (krAlpha > 0f) {
                 Box(Modifier.matchParentSize().padding(2.dp).background(Color(0xFFADB5BD).copy(alpha = krAlpha)))
@@ -119,12 +137,19 @@ fun WordRow(
     }
 }
 
+/**
+ * テーブルヘッダー
+ */
 @Composable
-fun WordTableHeader(fontSize: TextUnit) {
-    Row(Modifier.fillMaxWidth().background(Color(0xFF1E3A8A)).padding(vertical = 10.dp)) {
-        val headerFs = (fontSize.value * 0.55).sp
-        Text("No", Modifier.width(40.dp), color = Color.White, fontSize = headerFs, textAlign = TextAlign.Center)
-        Text("日本語", Modifier.weight(1f), color = Color.White, fontSize = headerFs, textAlign = TextAlign.Center)
-        Text("韓国語", Modifier.weight(1f), color = Color.White, fontSize = headerFs, textAlign = TextAlign.Center)
+fun WordTableHeader() {
+    val fontSizeProvider = LocalFontSizeProvider.current
+    Row(
+        modifier = Modifier.fillMaxWidth().background(Color(0xFF1E3A8A)).padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val fs = (fontSizeProvider().value * 0.55).sp
+        Text("No", Modifier.width(40.dp), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
+        Text("日本語", Modifier.weight(1f), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
+        Text("韓国語", Modifier.weight(1f), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
     }
 }
