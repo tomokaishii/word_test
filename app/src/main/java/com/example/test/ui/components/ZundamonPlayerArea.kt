@@ -51,7 +51,6 @@ fun ZundamonPlayerArea(
     
     // UI状態管理
     var expanded by remember { mutableStateOf(false) } 
-    // 🌟 修正: 初期表示を非表示 (false) に設定
     var isControlsVisible by remember { mutableStateOf(false) } 
     var showRuby by remember { mutableStateOf(false) } // ルビ表示モード
 
@@ -167,7 +166,7 @@ fun ZundamonPlayerArea(
                         color = Color(0xFF6C757D)
                     )
 
-                    // 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
+                    // 🌟 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.BottomEnd
@@ -328,8 +327,9 @@ fun KanjiMarkerArea(text: String, ruby: String, showRuby: Boolean) {
                             val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
                             
                             if (showRuby && currentRubyLayout != null) {
-                                // 🌟 漢字の「真上」にルビを描画
-                                val ry = (yOffset + rect.top - (rect.height * 0.35f)).toFloat()
+                                // 🌟 漢字の「真上（少し近づける）」にルビを描画
+                                // -0.35f から -0.2f に変更して下に移動
+                                val ry = (yOffset + rect.top - (rect.height * 0.2f)).toFloat()
                                 val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
                                 drawText(
                                     textLayoutResult = currentRubyLayout, 
