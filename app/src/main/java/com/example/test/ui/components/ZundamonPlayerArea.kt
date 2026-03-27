@@ -23,13 +23,12 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.test.data.model.Word
 import com.example.test.ui.screens.LocalFontSizeProvider
 import com.example.test.ui.screens.LocalTextMeasurer
 
 /**
  * ずんだもんプレイヤーエリア
- * 再生コントロール、速度調整、現在の単語表示を行うメインコンポーネントです。
+ * 🌟 モード切り替え（説明/単語/例文）に応じて、渡されたテキストを表示します。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,22 +36,21 @@ fun ZundamonPlayerArea(
     isPlaying: Boolean,
     currentSpeed: Float,
     selectedDescription: String,
-    descriptions: List<String> = listOf("単語帳の説明","単語の発音", "例文の発音"),
-    currentWord: Word?,
+    displayTextJp: String, // 🌟 追加: 表示用の日本語
+    displayTextKr: String, // 🌟 追加: 表示用の韓国語
+    displayRuby: String,   // 🌟 追加: 表示用のルビ
     onDescriptionChange: (String) -> Unit,
     onPlayPause: () -> Unit,
     onSpeedChange: (Float) -> Unit,
     onNext: () -> Unit,
     onPrev: () -> Unit
 ) {
-    // CompositionLocal からフォントサイズ取得関数を取得
     val fontSizeProvider = LocalFontSizeProvider.current
     val fontSize = fontSizeProvider()
     
-    // UI状態管理
     var expanded by remember { mutableStateOf(false) } 
     var isControlsVisible by remember { mutableStateOf(false) } 
-    var showRuby by remember { mutableStateOf(false) } // ルビ表示モード
+    var showRuby by remember { mutableStateOf(false) } 
 
     Card(
         modifier = Modifier
@@ -64,35 +62,23 @@ fun ZundamonPlayerArea(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // ヘッダー：開閉ボタンと「音声ガイド」ラベル
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // エリアの開閉ボタン（左側に配置）
                 IconButton(
                     onClick = { isControlsVisible = !isControlsVisible },
                     modifier = Modifier.size(32.dp).background(Color(0xFFF1F3F5), CircleShape)
                 ) {
                     Text(if (isControlsVisible) "︽" else "︾", color = Color.DarkGray, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
-
                 Spacer(Modifier.width(8.dp))
-
-                // 「音声ガイド」のラベル
-                Text(
-                    text = "音声ガイド",
-                    fontSize = (fontSize.value * 0.55).sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF495057)
-                )
+                Text(text = "音声ガイド", fontSize = (fontSize.value * 0.55).sp, fontWeight = FontWeight.Bold, color = Color(0xFF495057))
             }
 
-            // 表示エリア（表示設定がONの場合のみ）
             if (isControlsVisible) {
                 Spacer(Modifier.height(8.dp))
 
-                // モード選択ドロップダウン（音声ガイドラベルの下に配置）
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
@@ -113,21 +99,12 @@ fun ZundamonPlayerArea(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = selectedDescription,
-                                fontSize = (fontSize.value * 0.5).sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
+                            Text(text = selectedDescription, fontSize = (fontSize.value * 0.5).sp, fontWeight = FontWeight.Medium, color = Color.Black)
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                         }
                     }
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        descriptions.forEach { desc ->
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        listOf("単語帳の説明", "単語の発音", "例文の発音").forEach { desc ->
                             DropdownMenuItem(
                                 text = { Text(text = desc, fontSize = (fontSize.value * 0.5).sp) },
                                 onClick = { onDescriptionChange(desc); expanded = false },
@@ -139,7 +116,6 @@ fun ZundamonPlayerArea(
 
                 Spacer(Modifier.height(8.dp))
 
-                // 日本語・韓国語表示エリア（背景付き）
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -148,39 +124,24 @@ fun ZundamonPlayerArea(
                         .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 日本語（ふりがな対応）
+                    // 🌟 渡されたdisplayTextJpを表示
                     KanjiMarkerArea(
-                        text = currentWord?.jp ?: "再生準備完了",
-                        ruby = currentWord?.ruby ?: "",
+                        text = displayTextJp,
+                        ruby = displayRuby,
                         showRuby = showRuby
                     )
-                    
-                    // 日本語と韓国語の間隔
                     Spacer(Modifier.height(12.dp))
-                    
-                    // 韓国語（訳語）の表示
+                    // 🌟 渡されたdisplayTextKrを表示
                     Text(
-                        text = currentWord?.kr ?: "---",
+                        text = displayTextKr,
                         fontSize = (fontSize.value * 0.7).sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF6C757D)
                     )
 
-                    // 🌟 「ふりがな：ON/OFF」ボタンを韓国語の下の右下に配置
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.BottomEnd
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Text(
-                                text = "ふりがな：",
-                                fontSize = 10.sp,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Bold
-                            )
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomEnd) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                            Text(text = "ふりがな：", fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                             Surface(
                                 onClick = { showRuby = !showRuby },
                                 modifier = Modifier.height(26.dp),
@@ -189,12 +150,7 @@ fun ZundamonPlayerArea(
                                 shadowElevation = 2.dp
                             ) {
                                 Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
-                                    Text(
-                                        text = if (showRuby) "ON" else "OFF",
-                                        color = Color.White,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Black
-                                    )
+                                    Text(text = if (showRuby) "ON" else "OFF", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black)
                                 }
                             }
                         }
@@ -203,12 +159,7 @@ fun ZundamonPlayerArea(
 
                 Spacer(Modifier.height(10.dp))
 
-                // 再生コントロール：前へ、再生/一時停止、次へ
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     Surface(onClick = onPrev, modifier = Modifier.size(44.dp), color = Color(0xFF2ED573), shape = RoundedCornerShape(10.dp), shadowElevation = 4.dp) {
                         Box(contentAlignment = Alignment.Center) { Text("◀", color = Color.White, fontSize = 16.sp) }
                     }
@@ -224,18 +175,12 @@ fun ZundamonPlayerArea(
 
                 Spacer(Modifier.height(10.dp))
 
-                // 再生速度の切り替えバー
                 Row(modifier = Modifier.fillMaxWidth().height(34.dp).background(Color(0xFFF1F3F5), RoundedCornerShape(8.dp)).padding(3.dp)) {
                     val speeds = listOf(0.8f to "ゆっくり", 1.0f to "ふつう", 1.2f to "はやい")
                     speeds.forEach { (speed, label) ->
                         val active = currentSpeed == speed
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(if (active) Color(0xFF2ED573) else Color.Transparent).clickable { onSpeedChange(speed) }, contentAlignment = Alignment.Center) {
-                            Text(
-                                text = label,
-                                color = if (active) Color.White else Color(0xFF6C757D),
-                                fontSize = (fontSize.value * 0.45).sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            Text(text = label, color = if (active) Color.White else Color(0xFF6C757D), fontSize = (fontSize.value * 0.45).sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
@@ -245,107 +190,40 @@ fun ZundamonPlayerArea(
     }
 }
 
-/**
- * 漢字強調表示コンポーネント（ルビ表示対応）
- */
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun KanjiMarkerArea(text: String, ruby: String, showRuby: Boolean) {
     val fontSizeProvider = LocalFontSizeProvider.current
     val textMeasurer = LocalTextMeasurer.current
     val density = LocalDensity.current
-    
-    // メインテキストのスタイル
-    val textStyle = remember(fontSizeProvider()) {
-        TextStyle(
-            fontSize = fontSizeProvider(),
-            fontWeight = FontWeight.Bold,
-            platformStyle = PlatformTextStyle(includeFontPadding = false),
-            textAlign = TextAlign.Center
-        )
-    }
+    val textStyle = remember(fontSizeProvider()) { TextStyle(fontSize = fontSizeProvider(), fontWeight = FontWeight.Bold, platformStyle = PlatformTextStyle(includeFontPadding = false), textAlign = TextAlign.Center) }
+    val rubyTextStyle = remember(fontSizeProvider()) { TextStyle(fontSize = (fontSizeProvider().value * 0.4).sp, fontWeight = FontWeight.Bold, color = Color(0xFF228BE6), textAlign = TextAlign.Center) }
+    val annotatedString = remember(text) { buildAnnotatedString { text.forEach { char -> withStyle(SpanStyle(fontWeight = if (char in '\u4e00'..'\u9faf') FontWeight.ExtraBold else FontWeight.Bold)) { append(char) } } } }
 
-    // ルビテキストのスタイル
-    val rubyTextStyle = remember(fontSizeProvider()) {
-        TextStyle(
-            fontSize = (fontSizeProvider().value * 0.4).sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF228BE6), // ルビの色
-            textAlign = TextAlign.Center
-        )
-    }
-    
-    // 漢字のみ FontWeight を変えた装飾テキストを生成
-    val annotatedString = remember(text) {
-        buildAnnotatedString {
-            text.forEach { char ->
-                val kanji = char in '\u4e00'..'\u9faf'
-                withStyle(SpanStyle(fontWeight = if (kanji) FontWeight.ExtraBold else FontWeight.Bold)) {
-                    append(char)
+    Spacer(
+        modifier = Modifier.fillMaxWidth().height(with(density) { (fontSizeProvider().value * 2.5).sp.toDp() }).drawWithCache {
+            val layoutResult = textMeasurer.measure(text = annotatedString, style = textStyle, constraints = Constraints(maxWidth = size.width.toInt()))
+            val rubyParts = ruby.split(",")
+            val measuredRubyParts = if (showRuby && ruby.isNotEmpty()) { rubyParts.map { part -> if (part.trim().isNotEmpty()) textMeasurer.measure(text = part.trim(), style = rubyTextStyle) else null } } else emptyList()
+            val xOffset = (size.width - layoutResult.size.width) / 2f
+            val yOffset = (size.height - layoutResult.size.height) / 0.7f
+
+            onDrawBehind {
+                var kanjiCounter = 0
+                text.forEachIndexed { i, char ->
+                    if (char in '\u4e00'..'\u9faf') {
+                        val rect = layoutResult.getBoundingBox(i)
+                        val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
+                        if (showRuby && currentRubyLayout != null) {
+                            val ry = (yOffset + rect.top - (rect.height * 0.2f)).toFloat()
+                            val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
+                            drawText(textLayoutResult = currentRubyLayout, topLeft = Offset(x = rx, y = ry))
+                        }
+                        kanjiCounter++
+                    }
                 }
+                drawText(textLayoutResult = layoutResult, topLeft = Offset(x = xOffset.toFloat(), y = yOffset.toFloat()))
             }
         }
-    }
-
-    // 描画処理
-    Spacer(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(with(density) { (fontSizeProvider().value * 2.5).sp.toDp() })
-            .drawWithCache {
-                // テキストのレイアウト情報を取得
-                val layoutResult = textMeasurer.measure(
-                    text = annotatedString,
-                    style = textStyle,
-                    constraints = Constraints(maxWidth = size.width.toInt())
-                )
-
-                // カンマ区切りのルビを個別に計測
-                val rubyParts = ruby.split(",")
-                val measuredRubyParts = if (showRuby && ruby.isNotEmpty()) {
-                    rubyParts.map { part ->
-                        val trimmed = part.trim()
-                        if (trimmed.isNotEmpty()) {
-                            textMeasurer.measure(
-                                text = trimmed,
-                                style = rubyTextStyle
-                            )
-                        } else null
-                    }
-                } else emptyList()
-
-                // 中央配置用の座標計算
-                val xOffset = (size.width - layoutResult.size.width) / 2f
-                val yOffset = (size.height - layoutResult.size.height) / 0.7f
-
-                onDrawBehind {
-                    var kanjiCounter = 0
-                    // 各文字をチェックし、漢字の場合はルビを描画
-                    text.forEachIndexed { i, char ->
-                        if (char in '\u4e00'..'\u9faf') {
-                            val rect = layoutResult.getBoundingBox(i)
-                            val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
-                            
-                            if (showRuby && currentRubyLayout != null) {
-                                // 🌟 漢字の「真上（少し近づける）」にルビを描画
-                                // -0.35f から -0.2f に変更して下に移動
-                                val ry = (yOffset + rect.top - (rect.height * 0.2f)).toFloat()
-                                val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
-                                drawText(
-                                    textLayoutResult = currentRubyLayout, 
-                                    topLeft = Offset(x = rx, y = ry)
-                                )
-                            }
-                            kanjiCounter++
-                        }
-                    }
-
-                    // テキスト本体を描画
-                    drawText(
-                        textLayoutResult = layoutResult, 
-                        topLeft = Offset(x = xOffset.toFloat(), y = yOffset.toFloat())
-                    )
-                }
-            }
     )
 }

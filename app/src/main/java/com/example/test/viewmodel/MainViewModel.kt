@@ -33,10 +33,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var mediaPlayer: MediaPlayer? = null
 
-    /**
-     * [テキスト取得ロジック]
-     * レベルやカテゴリが変更された際に、リポジトリを通じてXMLからデータを読み込みます。
-     */
     fun updateLevel(level: String) {
         currentLevel = level
         loadCategories()
@@ -49,7 +45,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadCategories() {
-        // XMLの categories_n5 等からカテゴリ名一覧を取得
         categories = repository.getCategories(currentLevel)
         if (currentCategory !in categories) {
             currentCategory = categories.firstOrNull() ?: "基本"
@@ -57,32 +52,53 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadWords() {
-        // XMLの n5_基本_jp 等から単語リストを構築
         wordList.clear()
         wordList.addAll(repository.getWords(currentLevel, currentCategory))
         currentPlayingIndex = 0
     }
 
     /**
-     * [音声リソース名の解決ルール]
-     * 🌟 ここを修正することで、res/raw 内のファイル名との紐付けを手動で変更できます。
+     * [1. 表示用テキストの解決ルール]
+     * 🌟 各モードのデータが空の場合は「準備中」を返します。
      */
-    private fun resolveAudioResourceName(): String {
-        val lv = currentLevel.lowercase()      // 例: "n5"
-        val cat = currentCategory              // 例: "基本"
-        val idx = currentPlayingIndex + 1      // 1から始まる番号
-
+    fun getCurrentDisplayText(): Pair<String, String> {
+        val word = wordList.getOrNull(currentPlayingIndex) ?: return "準備中" to "---"
+        
         return when (selectedDescription) {
-            "単語帳の説明" -> "audio_description"
-            "単語の発音" -> "${lv}_${cat}_word_${idx}"    // 例: n5_基本_word_1
-            "例文の発音" -> "${lv}_${cat}_example_${idx}" // 例: n5_基本_example_1
-            else -> "audio_description"
+            "単語帳の説明" -> {
+                if (word.guideJp.isBlank()) "準備中" to "---"
+                else word.guideJp to word.guideKr
+            }
+            "単語の発音" -> {
+                if (word.jp.isBlank()) "準備中" to "---"
+                else word.jp to word.kr
+            }
+            "例文の発音" -> {
+                if (word.exJp.isBlank()) "準備中" to "---"
+                else word.exJp to word.exKr
+            }
+            else -> "---" to "---"
         }
     }
 
     /**
-     * [音声再生ロジック]
-     * 解決されたリソース名に基づいて MediaPlayer で再生します。
+     * [2. 音声リソース名の解決ルール]
+     */
+    private fun resolveAudioResourceName(): String {
+        val lv = currentLevel.lowercase() 
+        val cat = currentCategory 
+        val idx = currentPlayingIndex + 1
+
+        return when (selectedDescription) {
+            "単語帳の説明" -> "audio_guide_desc"
+            "単語の発音" -> "${lv}_${cat}_word_${idx}"
+            "例文の発音" -> "${lv}_${cat}_example_${idx}"
+            else -> "audio_guide_desc"
+        }
+    }
+
+    /**
+     * [3. 音声再生メインロジック]
      */
     fun playAudio() {
         mediaPlayer?.release()
@@ -90,7 +106,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val packageName = getApplication<Application>().packageName
 
         val audioResName = resolveAudioResourceName()
-        Log.d(TAG, "Playing audio: $audioResName")
+        Log.d(TAG, "Playing audio resource: $audioResName")
         
         val audioId = res.getIdentifier(audioResName, "raw", packageName)
         if (audioId != 0) {
@@ -98,15 +114,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 try {
                     playbackParams = playbackParams.setSpeed(playbackSpeed)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Speed setting error", e)
+                    Log.e(TAG, "Playback speed setting failed", e)
                 }
-                // 🌟 MediaPlayer.isPlaying と MainViewModel.isPlaying の名前衝突を避けるため this@MainViewModel を指定
                 setOnCompletionListener { this@MainViewModel.isPlaying = false }
                 start()
                 this@MainViewModel.isPlaying = true
             }
         } else {
-            Log.w(TAG, "Audio not found: $audioResName (Check res/raw folder)")
+            Log.w(TAG, "Audio not found: $audioResName")
             this@MainViewModel.isPlaying = false
         }
     }
@@ -134,16 +149,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleAllJp() {
         val target = !allJpHidden
-        val updated = wordList.map { it.copy(jpHide = target, krHide = false) }
+        val updatedList = wordList.map { it.copy(jpHide = target, krHide = false) }
         wordList.clear()
-        wordList.addAll(updated)
+        wordList.addAll(updatedList)
     }
 
     fun toggleAllKr() {
         val target = !allKrHidden
-        val updated = wordList.map { it.copy(krHide = target, jpHide = false) }
+        val updatedList = wordList.map { it.copy(krHide = target, jpHide = false) }
         wordList.clear()
-        wordList.addAll(updated)
+        wordList.addAll(updatedList)
     }
 
     fun toggleWordJp(index: Int) {
@@ -154,8 +169,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleWordKr(index: Int) {
         val word = wordList[index]
-        wordList[index] = if (word.jpHide) word.copy(jpHide = false, krHide = true) 
-                          else word.copy(krHide = !word.krHide)
+        if (word.jpHide) {
+            wordList[index] = word.copy(jpHide = false, krHide = true)
+        } else {
+            wordList[index] = word.copy(krHide = !word.krHide)
+        }
     }
 
     override fun onCleared() {
