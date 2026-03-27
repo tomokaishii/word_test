@@ -10,7 +10,7 @@ import com.example.test.data.repository.WordRepository
 
 /**
  * 【MainViewModel】
- * アプリケーションのビジネスロジックとUI状態を管理する中心的なクラスです。
+ * アプリの表示状態と、音声・テキストの取得ロジックを管理します。
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val TAG = "MainViewModel"
@@ -26,9 +26,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var selectedDescription by mutableStateOf("単語帳の説明") 
     var fontSize by mutableStateOf(20) 
 
-    /**
-     * 表示対象の単語リスト。
-     */
     val wordList = mutableStateListOf<Word>()
     
     val allJpHidden by derivedStateOf { wordList.isNotEmpty() && wordList.all { it.jpHide } }
@@ -36,6 +33,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var mediaPlayer: MediaPlayer? = null
 
+    /**
+     * [テキスト取得ロジック]
+     * レベルやカテゴリが変更された際に、リポジトリを通じてXMLからデータを読み込みます。
+     */
     fun updateLevel(level: String) {
         currentLevel = level
         loadCategories()
@@ -48,6 +49,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadCategories() {
+        // XMLの categories_n5 等からカテゴリ名一覧を取得
         categories = repository.getCategories(currentLevel)
         if (currentCategory !in categories) {
             currentCategory = categories.firstOrNull() ?: "基本"
@@ -55,22 +57,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadWords() {
+        // XMLの n5_基本_jp 等から単語リストを構築
         wordList.clear()
         wordList.addAll(repository.getWords(currentLevel, currentCategory))
         currentPlayingIndex = 0
     }
 
+    /**
+     * [音声リソース名の解決ルール]
+     * 🌟 ここを修正することで、res/raw 内のファイル名との紐付けを手動で変更できます。
+     */
+    private fun resolveAudioResourceName(): String {
+        val lv = currentLevel.lowercase()      // 例: "n5"
+        val cat = currentCategory              // 例: "基本"
+        val idx = currentPlayingIndex + 1      // 1から始まる番号
+
+        return when (selectedDescription) {
+            "単語帳の説明" -> "audio_description"
+            "単語の発音" -> "${lv}_${cat}_word_${idx}"    // 例: n5_基本_word_1
+            "例文の発音" -> "${lv}_${cat}_example_${idx}" // 例: n5_基本_example_1
+            else -> "audio_description"
+        }
+    }
+
+    /**
+     * [音声再生ロジック]
+     * 解決されたリソース名に基づいて MediaPlayer で再生します。
+     */
     fun playAudio() {
         mediaPlayer?.release()
         val res = getApplication<Application>().resources
         val packageName = getApplication<Application>().packageName
 
-        val audioResName = when (selectedDescription) {
-            "単語帳の説明" -> "audio_description"
-            "単語の発音" -> "${currentLevel.lowercase()}_${currentCategory}_word_${currentPlayingIndex + 1}"
-            "例文の発音" -> "${currentLevel.lowercase()}_${currentCategory}_example_${currentPlayingIndex + 1}"
-            else -> "audio_description"
-        }
+        val audioResName = resolveAudioResourceName()
+        Log.d(TAG, "Playing audio: $audioResName")
         
         val audioId = res.getIdentifier(audioResName, "raw", packageName)
         if (audioId != 0) {
@@ -78,14 +98,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 try {
                     playbackParams = playbackParams.setSpeed(playbackSpeed)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Playback speed setting failed", e)
+                    Log.e(TAG, "Speed setting error", e)
                 }
-                setOnCompletionListener { 
-                    this@MainViewModel.isPlaying = false 
-                }
+                // 🌟 MediaPlayer.isPlaying と MainViewModel.isPlaying の名前衝突を避けるため this@MainViewModel を指定
+                setOnCompletionListener { this@MainViewModel.isPlaying = false }
                 start()
                 this@MainViewModel.isPlaying = true
             }
+        } else {
+            Log.w(TAG, "Audio not found: $audioResName (Check res/raw folder)")
+            this@MainViewModel.isPlaying = false
         }
     }
 
@@ -110,61 +132,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         wordList.addAll(shuffled)
     }
 
-    /**
-     * 日本語列の表示/非表示を一括で切り替えます。
-     * 🌟 連動ロジック: 切り替え時、韓国語のフィルターを全て解除します。
-     */
     fun toggleAllJp() {
-        val targetJpHide = !allJpHidden
-        val updatedList = wordList.map { word ->
-            word.copy(jpHide = targetJpHide, krHide = false)
-        }
+        val target = !allJpHidden
+        val updated = wordList.map { it.copy(jpHide = target, krHide = false) }
         wordList.clear()
-        wordList.addAll(updatedList)
+        wordList.addAll(updated)
     }
 
-    /**
-     * 韓国語列の表示/非表示を一括で切り替えます。
-     * 🌟 連動ロジック: 切り替え時、日本語のフィルターを全て解除します。
-     */
     fun toggleAllKr() {
-        val targetKrHide = !allKrHidden
-        val updatedList = wordList.map { word ->
-            word.copy(krHide = targetKrHide, jpHide = false)
-        }
+        val target = !allKrHidden
+        val updated = wordList.map { it.copy(krHide = target, jpHide = false) }
         wordList.clear()
-        wordList.addAll(updatedList)
+        wordList.addAll(updated)
     }
 
-    /**
-     * 指定したインデックスの日本語表示を個別に切り替えます。
-     * 🌟 特殊ロジック: 韓国語が非表示なら入れ替えます。
-     */
     fun toggleWordJp(index: Int) {
         val word = wordList[index]
-        if (word.krHide) {
-            wordList[index] = word.copy(jpHide = true, krHide = false)
-        } else {
-            wordList[index] = word.copy(jpHide = !word.jpHide)
-        }
+        wordList[index] = if (word.krHide) word.copy(jpHide = true, krHide = false) 
+                          else word.copy(jpHide = !word.jpHide)
     }
 
-    /**
-     * 指定したインデックスの韓国語表示を個別に切り替えます。
-     * 🌟 特殊ロジック: 日本語が非表示なら入れ替えます。
-     */
     fun toggleWordKr(index: Int) {
         val word = wordList[index]
-        if (word.jpHide) {
-            wordList[index] = word.copy(jpHide = false, krHide = true)
-        } else {
-            wordList[index] = word.copy(krHide = !word.krHide)
-        }
+        wordList[index] = if (word.jpHide) word.copy(jpHide = false, krHide = true) 
+                          else word.copy(krHide = !word.krHide)
     }
 
     override fun onCleared() {
         super.onCleared()
         mediaPlayer?.release()
-        mediaPlayer = null
     }
 }
