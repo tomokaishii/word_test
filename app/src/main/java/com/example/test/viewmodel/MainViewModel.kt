@@ -111,51 +111,55 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * 日本語列の表示/非表示を全行一括で切り替えます。
-     * 🌟 高速化: 1要素ずつ更新せず、リストを一括で差し替えます。
+     * 日本語列の表示/非表示を一括で切り替えます。
+     * 🌟 連動ロジック: 切り替え時、韓国語のフィルターを全て解除します。
      */
     fun toggleAllJp() {
-        val currentAllKrHidden = allKrHidden
-        val currentAllJpHidden = allJpHidden
-        
+        val targetJpHide = !allJpHidden
         val updatedList = wordList.map { word ->
-            if (currentAllKrHidden) {
-                word.copy(jpHide = true, krHide = false)
-            } else {
-                word.copy(jpHide = !currentAllJpHidden)
-            }
+            word.copy(jpHide = targetJpHide, krHide = false)
         }
-        
         wordList.clear()
         wordList.addAll(updatedList)
     }
 
     /**
-     * 韓国語列の表示/非表示を全行一括で切り替えます。
-     * 🌟 高速化: 1要素ずつ更新せず、リストを一括で差し替えます。
+     * 韓国語列の表示/非表示を一括で切り替えます。
+     * 🌟 連動ロジック: 切り替え時、日本語のフィルターを全て解除します。
      */
     fun toggleAllKr() {
-        val currentAllJpHidden = allJpHidden
-        val currentAllKrHidden = allKrHidden
-        
+        val targetKrHide = !allKrHidden
         val updatedList = wordList.map { word ->
-            if (currentAllJpHidden) {
-                word.copy(jpHide = false, krHide = true)
-            } else {
-                word.copy(krHide = !currentAllKrHidden)
-            }
+            word.copy(krHide = targetKrHide, jpHide = false)
         }
-        
         wordList.clear()
         wordList.addAll(updatedList)
     }
 
+    /**
+     * 指定したインデックスの日本語表示を個別に切り替えます。
+     * 🌟 特殊ロジック: 韓国語が非表示なら入れ替えます。
+     */
     fun toggleWordJp(index: Int) {
-        wordList[index] = wordList[index].copy(jpHide = !wordList[index].jpHide)
+        val word = wordList[index]
+        if (word.krHide) {
+            wordList[index] = word.copy(jpHide = true, krHide = false)
+        } else {
+            wordList[index] = word.copy(jpHide = !word.jpHide)
+        }
     }
 
+    /**
+     * 指定したインデックスの韓国語表示を個別に切り替えます。
+     * 🌟 特殊ロジック: 日本語が非表示なら入れ替えます。
+     */
     fun toggleWordKr(index: Int) {
-        wordList[index] = wordList[index].copy(krHide = !wordList[index].krHide)
+        val word = wordList[index]
+        if (word.jpHide) {
+            wordList[index] = word.copy(jpHide = false, krHide = true)
+        } else {
+            wordList[index] = word.copy(krHide = !word.krHide)
+        }
     }
 
     override fun onCleared() {
