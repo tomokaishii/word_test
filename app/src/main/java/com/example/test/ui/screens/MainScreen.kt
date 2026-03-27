@@ -97,11 +97,19 @@ private fun MainLayout(vm: MainViewModel) {
                 )
 
                 // 4. プレイヤー
+                // 🌟 現在のモードに応じた表示テキストを取得
+                val (displayJp, displayKr) = vm.getCurrentDisplayText()
+                val rubyText = if (vm.selectedDescription == "単語の発音") {
+                    vm.wordList.getOrNull(vm.currentPlayingIndex)?.ruby ?: ""
+                } else ""
+
                 ZundamonPlayerArea(
                     isPlaying = vm.isPlaying,
                     currentSpeed = vm.playbackSpeed,
                     selectedDescription = vm.selectedDescription,
-                    currentWord = vm.wordList.getOrNull(vm.currentPlayingIndex),
+                    displayTextJp = displayJp,
+                    displayTextKr = displayKr,
+                    displayRuby = rubyText,
                     onDescriptionChange = { desc -> vm.selectedDescription = desc },
                     onPlayPause = { vm.togglePlay() },
                     onSpeedChange = { speed -> vm.playbackSpeed = speed },
