@@ -31,7 +31,7 @@ val LocalFontSizeProvider = compositionLocalOf { { 25.sp } }
 val LocalTextMeasurer = staticCompositionLocalOf<TextMeasurer> { error("No TextMeasurer") }
 
 /**
- * アプリのメイン画面 (究極爆速版)
+ * アプリのメイン画面
  */
 @OptIn(ExperimentalTextApi::class)
 @Composable
@@ -46,8 +46,6 @@ fun MainScreen(vm: MainViewModel) {
         }
     }
 
-    // 🌟 爆速ポイント：CompositionLocalProvider を通じて、
-    // サイズ取得関数と計算エンジンを全コンポーネントへ一括配信します。
     CompositionLocalProvider(
         LocalFontSizeProvider provides { vm.fontSize.sp },
         LocalTextMeasurer provides textMeasurer
@@ -57,8 +55,7 @@ fun MainScreen(vm: MainViewModel) {
 }
 
 /**
- * メインレイアウトの構築
- * 🌟 ここでは引数として fontSize を渡さないことで、サイズ変更時の再構築をスキップさせます。
+ * メインレイアウト
  */
 @Composable
 private fun MainLayout(vm: MainViewModel) {
@@ -97,11 +94,8 @@ private fun MainLayout(vm: MainViewModel) {
                 )
 
                 // 4. プレイヤー
-                // 🌟 現在のモードに応じた表示テキストを取得
-                val (displayJp, displayKr) = vm.getCurrentDisplayText()
-                val rubyText = if (vm.selectedDescription == "単語の発音") {
-                    vm.wordList.getOrNull(vm.currentPlayingIndex)?.ruby ?: ""
-                } else ""
+                // 現在のモードに応じた表示テキスト（日本語、韓国語、ルビ）を一括取得
+                val (displayJp, displayKr, rubyText) = vm.getCurrentDisplayText()
 
                 ZundamonPlayerArea(
                     isPlaying = vm.isPlaying,
@@ -140,7 +134,6 @@ private fun MainLayout(vm: MainViewModel) {
                 key = { _, word -> word.id },
                 contentType = { _, _ -> "word_row" }
             ) { index, word ->
-                // 🌟 【修正箇所】fontSize引数を削除
                 WordRow(
                     index = index,
                     word = word,

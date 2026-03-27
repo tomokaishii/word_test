@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="guide_jp">
+        <item>僕の名前はずんだもん</item>
+        <item>この単語帳の説明をするのだ</item>
+    </string-array>
+
+    <string-array name="guide_ruby">
+        <item>ぼく,な,まえ</item>
+        <item>たん,ご,ちょう,せつ,めい</item>
+    </string-array>
+
+    <string-array name="guide_kr">
+        <item>제 이름은 즌다몬입니다</item>
+        <item>이 단어장을 설명하겠습니다</item>
+    </string-array>
+
+    <string-array name="guide_audio">
+        <item>guide_1.wav</item>
+        <item>guide_2.wav</item>
+    </string-array>
+</resources>

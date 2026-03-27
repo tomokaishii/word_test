@@ -1,8 +1,0 @@
-<resources>
-
-    <string-array name="n5_family_jp"><item>父</item><item>母</item></string-array>
-    <string-array name="n5_family_kr"><item>아빠</item><item>엄마</item></string-array>
-
-    <string-array name="n5_town_jp"><item>学校</item><item>駅</item></string-array>
-    <string-array name="n5_town_kr"><item>학교</item><item>역</item></string-array>
-</resources>
