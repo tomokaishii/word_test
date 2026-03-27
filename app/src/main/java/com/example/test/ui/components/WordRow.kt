@@ -105,8 +105,9 @@ fun KanjiMarkerText(
                             val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
                             
                             if (currentRubyLayout != null) {
-                                // 🌟 ルビの位置をさらに高く（-0.15f -> -0.35f）
-                                val ry = (yOffset + rect.top - (rect.height * 0.35f)).toFloat()
+                                // 🌟 ルビの位置を少し下へ（漢字に近づける）
+                                // -0.35f から -0.2f に変更
+                                val ry = (yOffset + rect.top - (rect.height * 0.2f)).toFloat()
                                 val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
                                 drawText(
                                     textLayoutResult = currentRubyLayout,
