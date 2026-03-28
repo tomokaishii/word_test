@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="categories_n4">
+        <item>family</item>
+        <item>city</item>
+    </string-array>
+
+    <string-array name="n4_family_word_jp">
+        <item>朝ご飯</item>
+        <item>朝食</item>
+    </string-array>
+
+    <string-array name="n4_family_word_ruby">
+        <item>あさ,はん</item>
+        <item>ちょう,しょく</item>
+    </string-array>
+
+    <string-array name="n4_family_word_kr">
+        <item>아침밥</item>
+        <item>아침 식사</item>
+    </string-array>
+
+    <string-array name="n4_family_word_audio">
+        <item>n5_family_word_1.wav</item>
+        <item>n5_family_word_2.wav</item>
+    </string-array>
+</resources>

@@ -106,9 +106,8 @@ fun KanjiMarkerText(
                             
                             if (currentRubyLayout != null) {
                                 // 🌟 ルビの位置を少し下へ（漢字に近づける）
-                                // -0.35f から -0.2f に変更
-                                val ry = (yOffset + rect.top - (rect.height * 0.2f)).toFloat()
-                                val rx = (xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f).toFloat()
+                                val ry = yOffset + rect.top - (rect.height * 0.2f)
+                                val rx = xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f
                                 drawText(
                                     textLayoutResult = currentRubyLayout,
                                     topLeft = Offset(x = rx, y = ry)
@@ -119,7 +118,7 @@ fun KanjiMarkerText(
                     }
                     drawText(
                         textLayoutResult = layoutResult,
-                        topLeft = Offset(x = xOffset.toFloat(), y = yOffset.toFloat())
+                        topLeft = Offset(x = xOffset, y = yOffset)
                     )
                 }
             }

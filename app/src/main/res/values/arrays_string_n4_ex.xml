@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="n4_family_ex_jp">
+        <item>朝ご飯を食べるのだ</item>
+        <item>朝食を食べるのだ</item>
+    </string-array>
+
+    <string-array name="n4_family_ex_ruby">
+        <item>あさ,はん,た</item>
+        <item>ちょう,しょく,た</item>
+    </string-array>
+
+    <string-array name="n4_family_ex_kr">
+        <item>아침을 먹다</item>
+        <item>아침을 먹다</item>
+    </string-array>
+
+    <string-array name="n4_family_ex_audio">
+        <item>n5_family_ex_1.wav</item>
+        <item>n5_family_ex_2.wav</item>
+    </string-array>
+</resources>
