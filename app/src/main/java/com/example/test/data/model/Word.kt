@@ -1,21 +1,28 @@
 package com.example.test.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * 【Word: 単語データモデル】
- * アプリ内で扱う「単語」の最小単位を定義するデータクラスです。
+ * アプリ内で扱う「単語」の最小単位を定義するエンティティです。
  * 
- * @param id 単語を識別するための一意の番号。LazyColumnのkeyとしても使用されます。
- * @param jp 日本語の表記。漢字・かな混じりの文字列です。
- * @param ruby 振仮名（ルビ）情報。特定の漢字の上に振るための特殊記法もサポートします。
- * @param kr 韓国語の表記。対訳として表示されます。
- * @param jpHide 日本語部分をマスク（隠す）するかどうかのフラグ。
- * @param krHide 韓国語部分をマスク（隠す）するかどうかのフラグ。
+ * @param id 一意の識別番号（自動生成）。
+ * @param level 日本語能力試験レベル（0:N1, 1:N2, 2:N3, 3:N4, 4:N5）。
+ * @param genre ジャンル・カテゴリー（数値で管理）。
+ * @param jp 日本語の表記。
+ * @param ruby 振仮名（ルビ）。
+ * @param translation 翻訳語のテキスト。
+ * @param langType 言語タイプ（1:韓国語, 2:英語, 3:中国語）。
  */
+@Entity(tableName = "words")
 data class Word(
-    val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val level: Int = 0,
+    val genre: Int = 0,
     val jp: String,
     val ruby: String = "",
-    val kr: String,
-    val jpHide: Boolean = false,
-    val krHide: Boolean = false
+    val translation: String,
+    val langType: Int = 1
 )

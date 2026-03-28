@@ -31,9 +31,6 @@ private fun isKanji(char: Char): Boolean = char in '\u4e00'..'\u9faf'
 
 /**
  * 日本語表示コンポーネント（ルビ表示対応）
- * 🌟 手動調整用パラメータ:
- * @param heightMultiplier 枠自体の高さの倍率（数値を大きくすると枠が広がる）
- * @param yOffsetBias 垂直方向の表示位置（数値を小さくするとテキストが下に移動する）
  */
 @OptIn(ExperimentalTextApi::class)
 @Composable
@@ -105,7 +102,6 @@ fun KanjiMarkerText(
                             val currentRubyLayout = measuredRubyParts.getOrNull(kanjiCounter)
                             
                             if (currentRubyLayout != null) {
-                                // 🌟 ルビの位置を少し下へ（漢字に近づける）
                                 val ry = yOffset + rect.top - (rect.height * 0.2f)
                                 val rx = xOffset + rect.left + (rect.width - currentRubyLayout.size.width) / 2f
                                 drawText(
@@ -127,17 +123,20 @@ fun KanjiMarkerText(
 
 /**
  * 単語リストの1行
+ * jpHide/krHide を削除し、外部から状態を受け取るように変更
  */
 @Composable
 fun WordRow(
     index: Int,
     word: Word,
+    isJpHidden: Boolean, // 追加
+    isTranslationHidden: Boolean, // 追加
     onJpClick: () -> Unit,
-    onKrClick: () -> Unit
+    onTranslationClick: () -> Unit
 ) {
     val fontSizeProvider = LocalFontSizeProvider.current
-    val jpAlpha by animateFloatAsState(if (word.jpHide) 1f else 0f, tween(100), label = "jpAlpha")
-    val krAlpha by animateFloatAsState(if (word.krHide) 1f else 0f, tween(100), label = "krAlpha")
+    val jpAlpha by animateFloatAsState(if (isJpHidden) 1f else 0f, tween(100), label = "jpAlpha")
+    val trAlpha by animateFloatAsState(if (isTranslationHidden) 1f else 0f, tween(100), label = "trAlpha")
 
     Row(
         modifier = Modifier
@@ -163,16 +162,16 @@ fun WordRow(
             }
         }
 
-        Box(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onKrClick), Alignment.Center) {
+        Box(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onTranslationClick), Alignment.Center) {
             Text(
-                text = word.kr,
+                text = word.translation,
                 fontSize = fontSizeProvider(),
                 fontWeight = FontWeight.Bold,
                 style = TextStyle(textAlign = TextAlign.Center, platformStyle = PlatformTextStyle(false)),
                 modifier = Modifier.padding(vertical = 6.dp)
             )
-            if (krAlpha > 0f) {
-                Box(Modifier.matchParentSize().padding(2.dp).background(Color(0xFFADB5BD).copy(alpha = krAlpha)))
+            if (trAlpha > 0f) {
+                Box(Modifier.matchParentSize().padding(2.dp).background(Color(0xFFADB5BD).copy(alpha = trAlpha)))
             }
         }
     }
@@ -182,8 +181,15 @@ fun WordRow(
  * テーブルヘッダー
  */
 @Composable
-fun WordTableHeader() {
+fun WordTableHeader(langType: Int = 1) {
     val fontSizeProvider = LocalFontSizeProvider.current
+    val langLabel = when(langType) {
+        1 -> "韓国語"
+        2 -> "英語"
+        3 -> "中国語"
+        else -> "翻訳語"
+    }
+    
     Row(
         modifier = Modifier.fillMaxWidth().background(Color(0xFF1E3A8A)).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -191,6 +197,6 @@ fun WordTableHeader() {
         val fs = (fontSizeProvider().value * 0.55).sp
         Text("No", Modifier.width(40.dp), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
         Text("日本語", Modifier.weight(1f), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
-        Text("韓国語", Modifier.weight(1f), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
+        Text(langLabel, Modifier.weight(1f), color = Color.White, fontSize = fs, textAlign = TextAlign.Center)
     }
 }
