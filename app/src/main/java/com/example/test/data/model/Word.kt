@@ -2,29 +2,20 @@ package com.example.test.data.model
 
 /**
  * 【Word: 単語データモデル】
- * 3つのモード（単語・例文・説明）のテキストと音声情報を一括管理します。
+ * アプリ内で扱う「単語」の最小単位を定義するデータクラスです。
+ * 
+ * @param id 単語を識別するための一意の番号。LazyColumnのkeyとしても使用されます。
+ * @param jp 日本語の表記。漢字・かな混じりの文字列です。
+ * @param ruby 振仮名（ルビ）情報。特定の漢字の上に振るための特殊記法もサポートします。
+ * @param kr 韓国語の表記。対訳として表示されます。
+ * @param jpHide 日本語部分をマスク（隠す）するかどうかのフラグ。
+ * @param krHide 韓国語部分をマスク（隠す）するかどうかのフラグ。
  */
 data class Word(
     val id: Int,
-    
-    // 1. 単語モード用
     val jp: String,
-    val kr: String,
     val ruby: String = "",
-    val audioWord: String = "",
-    
-    // 2. 例文モード用
-    val exJp: String = "",
-    val exKr: String = "",
-    val exRuby: String = "",
-    val audioEx: String = "",
-    
-    // 3. 説明モード用 (XML: guide_jp 等から取得)
-    val guideJp: String = "",
-    val guideKr: String = "",
-    val guideRuby: String = "",
-    val audioGuide: String = "",
-
+    val kr: String,
     val jpHide: Boolean = false,
     val krHide: Boolean = false
 )
